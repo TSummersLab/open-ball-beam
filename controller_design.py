@@ -49,7 +49,7 @@ A4 = np.block([[A3, B3],
 B4 = np.block([[B3], [np.eye(m3)]])
 
 # State & control penalty weights
-Q4 = np.diag([10.0, 1.0, 0.01, 1.0])  # position, velocity, integral of position, control effort
+Q4 = np.diag([10.0, 1.0, 0.001, 1.0])  # position, velocity, integral of position, control effort
 R4 = np.diag([1.0])  # control difference
 
 # Process & measurement noise covariances
