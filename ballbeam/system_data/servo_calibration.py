@@ -1,44 +1,62 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pickle_io import pickle_export
-from settings import RAD2DEG, SERVO_CMD_MID
 
-# Import calibration data
-filename = 'servo_calibration_data.txt'
+from ballbeam.common.extramath import clipped_mean_rows
+from ballbeam.common.pickle_io import pickle_export
+from ballbeam.common.settings import RAD2DEG, SERVO_CMD_MID, STD_GRAVITY_ACCEL
 
-servo_outs = []
-raw_accels = []
-accel = []
 
-with open(filename) as file:
-    for line in file:
-        # print(line, end='')
-        words = line.split(' ')
-        if len(words) == 1:
-            word = words[0].split('\n')[0]
-            if word.isnumeric():
-                servo_outs.append(int(word))
-            else:
-                raw_accels.append(accel)
-                accel = []
-        elif len(words) == 3:
-            accel.append([float(word) for word in words])
+def get_servo_and_imu_data(filename):
+    servo_outs = []
+    raw_accels = []
+    accel = []
 
-servo_outs = np.array(servo_outs)
-raw_accels = np.array(raw_accels)
-accels = np.mean(raw_accels, axis=1)
+    with open(filename) as file:
+        collect_flag = False
+        for line in file:
+            # print(line, end='')
 
-delta_accels = accels
+            if "BEGIN DATA COLLECTION" in line:
+                collect_flag = True
+                continue
+            elif "END DATA COLLECTION" in line:
+                collect_flag = False
+                continue
+
+            words = line.split(' ')
+            first_word = words[0].strip()
+            if collect_flag:
+                if len(words) == 1:
+                    if first_word.isnumeric():
+                        servo_outs.append(int(first_word))
+                    else:
+                        raw_accels.append(accel)
+                        accel = []
+                elif len(words) == 3:
+                    accel.append([float(word) for word in words])
+
+    servo_outs = np.array(servo_outs)
+    raw_accels = np.array(raw_accels)
+    # accels = np.mean(raw_accels, axis=1)
+    accels = np.array([clipped_mean_rows(raw_accel.T) for raw_accel in raw_accels])
+    return servo_outs, accels
+
+
+# Import servo calibration data
+servo_outs, accels = get_servo_and_imu_data('servo_calibration_data.txt')
+mid_idx = np.where(servo_outs == SERVO_CMD_MID)[0][0]
+accel_offset = accels[mid_idx]
+delta_accels = accels - accel_offset
 delta_servo_outs = servo_outs - SERVO_CMD_MID
-standard_gravity_accel = 9.80665
 
-angles = np.arcsin(delta_accels[:, 2]/standard_gravity_accel)*RAD2DEG
+# Angles are determined solely from the z-component of the accelerometer readings
+angles = -np.arcsin(delta_accels[:, 2]/STD_GRAVITY_ACCEL)*RAD2DEG
 
 x = angles
 y = delta_servo_outs
 
 # Choose the polynomial powers to use in the least-squares regression
-powers = [3, 2, 1, 0]
+powers = [5, 4, 3, 2, 1, 0]
 degree = max(powers)
 
 # Form the data matrix
@@ -59,11 +77,12 @@ pickle_export(dirname_out='.', filename_out='servo_calibration_coefficients.pkl'
 
 # plotting for sanity check
 poly = np.poly1d(coefficients)
+angle_deg_min, angle_deg_max = -8, 4
 
 plt.close('all')
 plt.figure()
 plt.scatter(angles, delta_servo_outs, c='b', label='true', zorder=10)
-t = np.linspace(-5, 5, 100)
+t = np.linspace(angle_deg_min, angle_deg_max, 100)
 plt.plot(t, poly(t), lw=2, linestyle='--', color='r', alpha=0.5, label='approx', zorder=1)
 plt.scatter(angles, poly(angles), s=50, lw=4, color='r', edgecolors='none', alpha=0.8, label='approx')
 plt.xlabel('Beam angle (degrees)')
@@ -77,7 +96,7 @@ plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
 
 plt.figure()
 plt.scatter(angles, delta_servo_outs-delta_servo_outs, c='b', label='true', zorder=10)
-t = np.linspace(-5, 5, 100)
+t = np.linspace(angle_deg_min, angle_deg_max, 100)
 if angles[0] > angles[1]:
     angles, delta_servo_outs = np.flip(angles), np.flip(delta_servo_outs)
 yt = np.interp(t, angles, delta_servo_outs)

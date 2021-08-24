@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from setuptools import setup
+from setuptools import setup, find_packages
 
-setup(name='gym_ballbeam',
-      version='0.0.1',
-      install_requires=['gym>=0.2.3',
-                        'numpy']
-      )
+setup(name='ballbeam', version='1.0', packages=find_packages())

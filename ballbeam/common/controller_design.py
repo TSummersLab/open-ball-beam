@@ -2,11 +2,10 @@ import autograd.numpy as np
 import autograd.numpy.linalg as la
 import autograd.numpy.random as npr
 from scipy.linalg import solve_discrete_lyapunov, solve_discrete_are, expm
-
 import matplotlib.pyplot as plt
 
-from pickle_io import pickle_export
-from settings import DT
+from ballbeam.common.pickle_io import pickle_export
+from ballbeam.common.settings import DT, GRAVITY, DAMP
 
 
 def dlyap(A, Q):
@@ -24,12 +23,9 @@ def get_gain(A, B, Q, R):
 
 
 # Model data
-damp = 1e-3  # 1/second
-gravity = 9.81  # meters/second/second
-
 Ac = np.array([[0, 1],
-               [0, -damp]])
-Bc = np.array([[0], [-gravity]])
+               [0, -DAMP]])
+Bc = np.array([[0], [-GRAVITY]])
 
 n2, m2, p2 = 2, 1, 1
 A2 = expm(DT*Ac)  # ~= np.eye(n2) + DT*Ac
@@ -49,8 +45,8 @@ A4 = np.block([[A3, B3],
 B4 = np.block([[B3], [np.eye(m3)]])
 
 # State & control penalty weights
-Q4 = np.diag([10.0, 1.0, 0.001, 1.0])  # position, velocity, integral of position, control effort
-R4 = np.diag([1.0])  # control difference
+Q4 = np.diag([1000.0, 100.0, 0.1, 1.0])  # position, velocity, integral of position, control effort
+R4 = np.diag([20.0])  # control difference
 
 # Process & measurement noise covariances
 W2 = np.diag([1e-6, 1e-5])
@@ -98,14 +94,14 @@ x_est = np.copy(z_est[0:2])
 
 AL2 = A2 + np.dot(L2, C2)
 
-# Simulation
-from controller import LQGController
-from reference import ConstantReference
-from simulator import Simulator
-system = Simulator(x0=x0)
-K = K[0]
-B2 = B2[:, 0]
-L2 = L2[:, 0]
+# # Simulation
+# from controller import LQGController
+# from reference import ConstantReference
+# from simulator import Simulator
+# system = Simulator(x0=x0)
+# K = K[0]
+# B2 = B2[:, 0]
+# L2 = L2[:, 0]
 
 # TODO get simulation and history data from interface.py and just plot it here
 #

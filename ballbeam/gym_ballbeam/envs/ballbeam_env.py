@@ -4,15 +4,16 @@ from gym import spaces, logger
 from gym.utils import seeding
 import numpy as np
 
-from settings import DEG2RAD, DT
-from colors import Monokai
+from ballbeam.common.settings import DEG2RAD, DT
+from ballbeam.common.colors import Monokai
 
-from reference import ConstantReference, PeriodicReference
-from cost import Cost
-from simulator import Simulator, XMIN, XMAX, YMIN, YMAX
-from hardware import Hardware
+from ballbeam.common.reference import ConstantReference
+from ballbeam.common.cost import Cost
+from ballbeam.common.simulator import Simulator, XMIN, XMAX, YMIN, YMAX
+from ballbeam.common.hardware import Hardware
+from ballbeam.common.interface import action2actuation
 
-from interface import action2actuation
+# TODO update this Gym env with new ballbeam controller interface - see interface.py
 
 
 class BallBeamEnv(gym.Env):

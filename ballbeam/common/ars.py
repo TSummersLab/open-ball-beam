@@ -1,5 +1,6 @@
 from time import time
 from copy import deepcopy
+
 import numpy as np
 from scipy.special import expit
 import gym

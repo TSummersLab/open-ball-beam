@@ -1,5 +1,6 @@
 import numpy as np
-from settings import DT, RAD2DEG
+
+from ballbeam.common.settings import DT, RAD2DEG
 
 
 # Base class for reference trajectory generators
