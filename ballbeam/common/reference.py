@@ -22,7 +22,7 @@ class ConstantReference(Reference):
 
 
 class PeriodicReference(ConstantReference):
-    def __init__(self, amplitude=0.070, frequency=0.1, waveform='sine'):
+    def __init__(self, amplitude=0.050, frequency=0.1, waveform='sine'):
         super().__init__()
         self.amplitude = amplitude  # in meters
         self.frequency = frequency  # in Hz

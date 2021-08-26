@@ -73,10 +73,14 @@ class PIDController(Controller):
         new_error_diff = (new_error - self.error_last)/DT
         self.error_diff = mix(new_error_diff, self.error_diff, self.error_diff_mix)
 
+        # Control
         u_p = self.kp*self.error
         u_i = self.ki*self.error_sum
         u_d = self.kd*self.error_diff
         self._u = u_p + u_i + u_d
+
+        # State estimate
+        self._z = np.array([self.error, self.error_diff, self.error_sum, self._u])
 
         if anti_windup and self.saturated:
             pass
@@ -104,7 +108,32 @@ class LQGController(Controller):
         self.K = controller_data['K']
         self.L = controller_data['L']
 
-        self.AL = self.A + np.dot(self.L[:, None], self.C[None, :])
+        self.AL = self.A - np.dot(self.L[:, None], self.C[None, :])
+
+    # def update(self, observation, setpoint, t, anti_windup=True):
+    #     if self.ball_removed:
+    #         self.error = 0
+    #         self.error_sum = 0
+    #     else:
+    #         # Control action using LQR
+    #         du = np.dot(self.K, self._z)
+    #         self._u += du
+    #
+    #         # Update error
+    #         self.error = observation - setpoint
+    #
+    #         # Update error sum
+    #         if anti_windup and self.saturated:
+    #             pass
+    #         else:
+    #             self.error_sum += self.error
+    #
+    #         # State estimate using LQE
+    #         # x is the physical state estimate
+    #         # z is the augmented state estimate, which is the physical state augmented with the error_sum and action
+    #         x = self._z[0:2]
+    #         x = np.dot(self.AL, x) + np.dot(self.B, self._u) - np.dot(self.L, self.error)
+    #         self._z = np.hstack([x, np.array([self.error_sum, self._u])])
 
     def update(self, observation, setpoint, t, anti_windup=True):
         if self.ball_removed:
@@ -122,16 +151,16 @@ class LQGController(Controller):
             if anti_windup and self.saturated:
                 pass
             else:
-                self.error_sum += self.error
+                # self.error_sum += self.error
+                self.error_sum += self.error*DT
 
             # State estimate using LQE
             # x is the physical state estimate
             # z is the augmented state estimate, which is the physical state augmented with the error_sum and action
+            # LQE is only needed for x since error_sum and action are known exactly
             x = self._z[0:2]
-            x = np.dot(self.AL, x)
-            x += np.dot(self.B, self._u)
-            x -= np.dot(self.L, self.error)
-            self._z = np.hstack([x, np.array([self.error_sum, self._u])])
+            x = np.dot(self.AL, x) + np.dot(self.B, self._u) + np.dot(self.L, self.error)
+            self._z = np.hstack([x, self.error_sum, self._u])
 
 
 class MPCController(Controller):

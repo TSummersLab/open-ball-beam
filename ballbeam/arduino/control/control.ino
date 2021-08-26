@@ -68,7 +68,7 @@ void loop() {
     last = now;
   }
   else
-    delayMicroseconds(20);
+    delayMicroseconds(1);
 }
 
 

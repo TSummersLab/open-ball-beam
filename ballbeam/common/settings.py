@@ -33,6 +33,9 @@ SERVO_CMD_MIN = SERVO_CMD_MID - 500  # safe minimum servo pwm in microseconds
 SERVO_CMD_MAX = SERVO_CMD_MID + 500  # safe maximum servo pwm in microseconds
 SERVO_CMD_REST = SERVO_CMD_MID + 30  # rest servo pwm, tilt down slightly so ball rolls to end stop
 
+PWM_SCALE = 0.001
+BEAM_ANGLE_SCALE = 10.0
+
 BEAM_ANGLE_MIN = -4.0  # in degrees
 BEAM_ANGLE_MAX = 4.0  # in degrees
 
@@ -45,12 +48,19 @@ SENSOR_CALIBRATION_COEFFICIENTS = pickle_import(data_path)
 DISTANCE_MID = 105  # midpoint of beam rails, in millimeters (250mm rails, each end embedded in 20mm deep rail holders, leaving 210mm exposed, so midpoint is 210mm/2 = 105mm)
 DISTANCE_BACKSTOP = 0.090  # max distance from midpoint, in meters
 
+READING_OFFSET = 142.454545  # get this value from sensor_calibration.py as the raw sensor reading when ball physically at DISTANCE_MID
+READING_SCALE = 0.01
+OBSERVATION_SCALE = 0.01
+
 TIMEOUT_TIME = 0.100  # in seconds
 TIMEOUT_STEPS = int(TIMEOUT_TIME/DT)
 
 ########################################################################################################################
 # Model constants
 GRAVITY = STD_GRAVITY_ACCEL  # meters/second/second
+BALL_RADIUS = 0.01905  # meters
+BALL_MASS = 0.039  # kilograms
+MASS_SCALE = 1.0 + (2.0/5.0)  # scaling constant of mass resulting from the ball's rotational inertia. This value is for a solid sphere since J = (2/5)*m*R**2
 DAMP = 0.01  # 1/second
 MOTOR_SPEED = (60/0.16)*DEG2RAD  # rad/sec
 TRANSITION_RATE = 100.0

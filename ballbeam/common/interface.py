@@ -120,7 +120,7 @@ def update_plot_data(plot_data_dict, data):
         if key == 'position':
             new_vals = [1000*data.observation, 1000*(data.setpoint + data.state_estimate[0]), 1000*data.setpoint]
         elif key == 'state_estimate':
-            new_vals = [5*data.state_estimate[0], data.state_estimate[1], 0.1*data.state_estimate[2]]
+            new_vals = [5*data.state_estimate[0], data.state_estimate[1], 10.0*data.state_estimate[2]]
         elif key == 'action':
             new_vals = [data.action]
         elif key == 'cost':
@@ -210,9 +210,9 @@ if __name__ == '__main__':
     controller = LQGController()
 
     # Choose the reference
-    reference = ConstantReference()
+    # reference = ConstantReference()
     # reference = PeriodicReference(waveform='sine', frequency=0.10)
-    # reference = PeriodicReference(waveform='square', frequency=0.10)
+    reference = PeriodicReference(waveform='square', frequency=0.10)
 
     # Choose the cost
     cost = Cost()

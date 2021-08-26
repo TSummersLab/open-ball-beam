@@ -4,7 +4,7 @@ import numpy.linalg as la
 
 from ballbeam.common.extramath import saturate
 from ballbeam.common.settings import DT, DEG2RAD, BEAM_ANGLE_MIN, BEAM_ANGLE_MAX, \
-    GRAVITY, DAMP, MOTOR_SPEED, TRANSITION_RATE
+    GRAVITY, BALL_MASS, MASS_SCALE, DAMP, MOTOR_SPEED, TRANSITION_RATE
 
 
 XMIN, XMAX = -0.115, 0.115  # limits of physical position, in meters
@@ -42,15 +42,27 @@ def step(f, x, u, w, dt=None, method='rk4'):
 
 
 class Simulator:
-    def __init__(self, x0=None, gravity=None, damp=None, motor_speed=None, transition_rate=None):
+    def __init__(self, x0=None, mass=None, mass_scale=None, gravity=None, damp=None, motor_speed=None, transition_rate=None):
         self.n, self.m, self.p = 3, 1, 1
+
+        if mass is None:
+            mass = BALL_MASS
+        self.mass = mass  # kilograms
+
+        if mass_scale is None:
+            mass_scale = MASS_SCALE
+        self.mass_scale = mass_scale  # meters/second/second
+
         if gravity is None:
             gravity = GRAVITY
         self.gravity = gravity  # meters/second/second
+        self.gravity_scaled = self.gravity/self.mass_scale
 
         if damp is None:
             damp = DAMP
         self.damp = damp  # 1/second
+
+        self.damp_scaled = self.damp/(self.mass*self.mass_scale)
 
         if motor_speed is None:
             motor_speed = MOTOR_SPEED
@@ -86,31 +98,38 @@ class Simulator:
     def generate_observation_noise(self):
         return npr.multivariate_normal(np.zeros(self.p), self.V)[0]
 
-    # def f(self, x, u):
-    #     # x[0]  Ball position
-    #     # x[1]  Ball velocity
-    #     # u     Sine of commanded beam angle
-    #     sin_angle = np.clip(u, -1, 1)
-    #     return np.array([x[1], -self.gravity*sin_angle - self.damp*x[1]])
-
-    def f(self, x, u):
-        # x[0]  Ball position (m)
-        # x[1]  Ball velocity (m/s)
-        # x[2]  Beam angle (rad)
-        # u     Sine of commanded beam angle
+    def f(self, x, u, servo_assumption='instant'):
+        # TODO implement the missing term related to \dot{theta}^2
+        # TODO implement deadband for servo commands that do not exceed 3ms PWM difference
 
         sin_u_angle = np.clip(u, -1, 1)
-        u_angle = np.arcsin(sin_u_angle)
 
-        # Version using soft tanh()
-        # return np.array([x[1],
-        #                  -self.gravity*np.sin(x[2]) - self.damp*x[1],
-        #                  self.motor_speed*np.tanh(self.transition_rate*(u_angle - x[2]))])
+        if servo_assumption == 'instant':
+            # This dynamics function assumes the commanded beam angle is achieved instantly
+            # x[0]  Ball position
+            # x[1]  Ball velocity
+            # u     Sine of commanded beam angle
 
-        # Version using hard sign()
-        return np.array([x[1],
-                         -self.gravity*np.sin(x[2]) - self.damp*x[1],
-                         self.motor_speed*np.sign(u_angle - x[2])])
+            return np.array([x[1],
+                             -self.gravity_scaled*sin_u_angle - self.damp_scaled*x[1]])
+
+        elif servo_assumption == 'speed_limited':
+            # This dynamics function assumes servo-style tracking of the commanded beam angle
+
+            # x[0]  Ball position (m)
+            # x[1]  Ball velocity (m/s)
+            # x[2]  Beam angle (rad)
+            # u     Sine of commanded beam angle
+
+            u_angle = np.arcsin(sin_u_angle)
+
+            # Make the servo speed function
+            def speed_fun(x, hard=True):
+                return np.sign(x) if hard else np.tanh(self.transition_rate*x)
+
+            return np.array([x[1],
+                             -self.gravity_scaled*np.sin(x[2]) - self.damp_scaled*x[1],
+                             self.motor_speed*speed_fun(u_angle - x[2])])
 
     def process(self, u):
         u, self.saturated = saturate(u, UMIN, UMAX)

@@ -6,9 +6,10 @@ from serial import Serial
 
 from ballbeam.common.extramath import saturate
 from ballbeam.common.settings import PORT, BAUD_RATE, DT, DISTANCE_BACKSTOP, TIMEOUT_STEPS, \
-    RAD2DEG, SERVO_CMD_REST, SERVO_CMD_MID, SERVO_CMD_MIN, SERVO_CMD_MAX, \
+    READING_OFFSET, READING_SCALE, OBSERVATION_SCALE, \
+    RAD2DEG, DEG2RAD, SERVO_CMD_REST, SERVO_CMD_MID, SERVO_CMD_MIN, SERVO_CMD_MAX, \
     SERVO_CALIBRATION_COEFFICIENTS, SENSOR_CALIBRATION_COEFFICIENTS, \
-    BEAM_ANGLE_MIN, BEAM_ANGLE_MAX
+    BEAM_ANGLE_MIN, BEAM_ANGLE_MAX, BEAM_ANGLE_SCALE, PWM_SCALE
 
 
 def create_serial(port=None, baud_rate=None, timeout=1):
@@ -64,21 +65,21 @@ class Hardware:
             if coefficients is None:
                 coefficients = SERVO_CALIBRATION_COEFFICIENTS
 
-            # This makes the linearization assumption that theta = np.sin(theta)
-            # beam_angle_rad = action
+            # # This line makes the linearization assumption that theta = np.sin(theta)
+            # beam_angle = action
 
             # Saturate action into interval [-1, 1] before passing thru np.arcsin()
             # This will convert the action to a beam angle
             action_sat = np.clip(action, -1.0, 1.0)
-            beam_angle_rad = np.arcsin(action_sat)
+            beam_angle = np.arcsin(action_sat)
 
             # Saturate beam angle against the system limits
-            beam_angle_deg, saturated = saturate(beam_angle_rad*RAD2DEG, BEAM_ANGLE_MIN, BEAM_ANGLE_MAX)
+            beam_angle, saturated = saturate(beam_angle, BEAM_ANGLE_MIN*DEG2RAD, BEAM_ANGLE_MAX*DEG2RAD)
 
             # Convert beam angle to an actuation PWM using the servo calibration polynomial coefficients
-            d = len(coefficients) - 1
-            beam_angle_powers = np.array([beam_angle_deg**d for d in range(d, -1, -1)])
-            actuation_deviation = int(np.sum(coefficients*beam_angle_powers))
+            x = beam_angle*BEAM_ANGLE_SCALE
+            y = np.polyval(coefficients, x)
+            actuation_deviation = int(y/PWM_SCALE)
             actuation = SERVO_CMD_MID + actuation_deviation
 
             # Saturate actuation PWM against system limits
@@ -112,14 +113,12 @@ class Hardware:
         # Convert a raw reading to a standard observation
         # arg: reading, in millimeters
         # return: observation, in meters
-
         if coefficients is None:
             coefficients = SENSOR_CALIBRATION_COEFFICIENTS
 
-        d = len(coefficients) - 1
-        reading_powers = np.array([reading**d for d in range(d, -1, -1)])
-        observation = 0.001*np.sum(coefficients*reading_powers)
-        # observation = 0.001*reading - SENSOR_MIDPOINT
+        x = (reading - READING_OFFSET)*READING_SCALE
+        y = np.polyval(coefficients, x)
+        observation = (0.001/OBSERVATION_SCALE)*y
         return observation
 
     def observe(self):

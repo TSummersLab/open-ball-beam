@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from ballbeam.common.utility import print_arduino_vector
 from ballbeam.common.extramath import clipped_mean_rows
 from ballbeam.common.pickle_io import pickle_export
-from ballbeam.common.settings import DISTANCE_MID
+from ballbeam.common.settings import DISTANCE_MID, READING_SCALE, OBSERVATION_SCALE
 
 
 def get_distance_and_sensor_data(filename):
@@ -44,13 +45,18 @@ def get_distance_and_sensor_data(filename):
 
 # Import servo calibration data
 distances, readings, raw_readings = get_distance_and_sensor_data('sensor_calibration_data.txt')
+mid_idx = np.where(distances == DISTANCE_MID)[0][0]
+READING_OFFSET = readings[mid_idx]
+delta_readings = readings - READING_OFFSET
+delta_raw_readings = raw_readings - READING_OFFSET
 delta_distances = distances - DISTANCE_MID
 
-x = readings
-y = delta_distances
+x = delta_readings*READING_SCALE
+xs = delta_raw_readings*READING_SCALE
+y = delta_distances*OBSERVATION_SCALE
 
 # Choose the polynomial powers to use in the least-squares regression
-powers = [3, 2, 1, 0]
+powers = [5, 4, 3, 2, 1]
 degree = max(powers)
 
 # Form the data matrix
@@ -68,35 +74,42 @@ for i in range(degree+1):
 # Export the coefficients
 pickle_export(dirname_out='.', filename_out='sensor_calibration_coefficients.pkl', data=coefficients)
 
+# Print for Arduino
+print_arduino_vector(raw_coefficients, var_name='r2o_coeffs')
 
 # plotting for sanity check
 poly = np.poly1d(coefficients)
-reading_min, reading_max = 0, 300
+xmin, xmax = -150*READING_SCALE, 150*READING_SCALE
 
 plt.close('all')
+
+# Curve plot
 plt.figure()
-plt.scatter(readings, delta_distances, c='b', label='true', zorder=10)
-t = np.linspace(reading_min, reading_max, 100)
+plt.scatter(x, y, c='b', label='true', zorder=10)
+t = np.linspace(xmin, xmax, 100)
 plt.plot(t, poly(t), lw=2, linestyle='--', color='r', alpha=0.5, label='approx', zorder=1)
-plt.scatter(readings, poly(readings), s=50, lw=4, color='r', edgecolors='none', alpha=0.8, label='approx')
-plt.xlabel('Reading (mm)')
-plt.ylabel('Delta distance (mm)')
+plt.scatter(x, poly(x), s=50, lw=4, color='r', edgecolors='none', alpha=0.8, label='approx')
+for i in range(x.size):
+    plt.scatter(xs[i], np.repeat(y[i], xs[i].size), c='g', edgecolors='none', alpha=0.4, label='samples')
+
+plt.xlabel('Delta reading (mm) (scaled)')
+plt.ylabel('Delta distance (mm) (scaled)')
 plt.legend()
 
 handles, labels = plt.gca().get_legend_handles_labels()
 order = [1, 2, 0]
 plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
 
-
+# Error plot
 plt.figure()
-plt.scatter(readings, delta_distances - delta_distances, c='b', label='true', zorder=10)
-t = np.linspace(reading_min, reading_max, 100)
+plt.scatter(x, y - y, c='b', label='true', zorder=10)
+t = np.linspace(xmin, xmax, 100)
 
-yt = np.interp(t, readings, delta_distances)
+yt = np.interp(t, x, y)
 plt.plot(t, poly(t)-yt, lw=2, linestyle='--', color='r', alpha=0.5, label='approx', zorder=1)
-plt.scatter(readings, poly(readings) - delta_distances, s=50, lw=4, edgecolors='none', color='r', alpha=0.8, label='approx')
-plt.xlabel('Reading (mm)')
-plt.ylabel('Delta distance error (mm)')
+plt.scatter(x, poly(x) - y, s=50, lw=4, edgecolors='none', color='r', alpha=0.8, label='approx')
+plt.xlabel('Delta reading (mm) (scaled)')
+plt.ylabel('Delta distance error (mm) (scaled)')
 plt.legend()
 
 handles, labels = plt.gca().get_legend_handles_labels()

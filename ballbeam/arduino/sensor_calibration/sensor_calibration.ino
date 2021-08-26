@@ -13,18 +13,15 @@ const int SERVO_CMD_REST = 1400;  // in microseconds  // make the ball roll down
 
 const int DT = 20;               // in milliseconds
 
-
-const int dist_min = 20;
-const int dist_max = 180;
+const int dists[] = {14, 30, 40, 50, 60, 70, 80, 90, 100, 105, 110, 120, 130, 140, 150, 160, 170, 196};
+//const int dists[] = {105};
+const int num_dists = sizeof(dists) / sizeof(int);
 
 unsigned long now = millis();
 unsigned long last = now;
 int time_since_last = 0;
 
-const int num_steps = 8;
-//const int num_steps = 2;
 const int num_measurements = 20;
-
 
 
 void setup() {
@@ -55,13 +52,14 @@ void setup() {
   Serial.print("BEGIN DATA COLLECTION\n");
   delay(1000);
 
-  for (int i = 0; i <= num_steps; i += 1) {
-    int dist_cur = map(i, 0, num_steps, dist_min, dist_max);
+  for (int i = 0; i < num_dists; i += 1) {
+//    int dist_cur = map(i, 0, num_steps, dist_min, dist_max);
+    int dist_cur = dists[i];
     Serial.print("True distance ");
     Serial.print(dist_cur);
     Serial.print("\n");
     
-    delay(10000); // This wait time is for you to move the ball to the new position. Modify as needed   
+    delay(10000); // This wait time is for you to move the ball to the new position. Modify as needed.   
     
     for (int count = 1; count <= num_measurements; count += 1) {
       // Get a new sensor reading
