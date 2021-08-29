@@ -52,7 +52,7 @@ class SineController(Controller):
 
 # PID with exponential smoothing filters
 class PIDController(Controller):
-    def __init__(self, kp=0.6, ki=0.1, kd=0.3, error_mix=0.6, error_diff_mix=0.2):
+    def __init__(self, kp=0.5, ki=0.1, kd=0.25, error_mix=0.50, error_diff_mix=0.25):
         super().__init__()
         self.kp = kp
         self.ki = ki
@@ -67,11 +67,11 @@ class PIDController(Controller):
         self.error_diff = 0
 
     def update(self, observation, setpoint, t, anti_windup=True):
-        new_error = observation - setpoint
-        self.error = mix(new_error, self.error, self.error_mix)
+        error_new = observation - setpoint
+        self.error = mix(error_new, self.error, self.error_mix)
 
-        new_error_diff = (new_error - self.error_last)/DT
-        self.error_diff = mix(new_error_diff, self.error_diff, self.error_diff_mix)
+        error_diff_new = (error_new - self.error_last)/DT
+        self.error_diff = mix(error_diff_new, self.error_diff, self.error_diff_mix)
 
         # Control
         u_p = self.kp*self.error
@@ -140,18 +140,13 @@ class LQGController(Controller):
             self.error = 0
             self.error_sum = 0
         else:
-            # Control action using LQR
-            du = np.dot(self.K, self._z)
-            self._u += du
-
-            # Update error
+            # Update error based on current observation and setpoint
             self.error = observation - setpoint
 
             # Update error sum
             if anti_windup and self.saturated:
                 pass
             else:
-                # self.error_sum += self.error
                 self.error_sum += self.error*DT
 
             # State estimate using LQE
@@ -161,6 +156,10 @@ class LQGController(Controller):
             x = self._z[0:2]
             x = np.dot(self.AL, x) + np.dot(self.B, self._u) + np.dot(self.L, self.error)
             self._z = np.hstack([x, self.error_sum, self._u])
+
+            # Control action using LQR
+            du = np.dot(self.K, self._z)
+            self._u += du
 
 
 class MPCController(Controller):

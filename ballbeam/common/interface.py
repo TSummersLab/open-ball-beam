@@ -211,7 +211,7 @@ if __name__ == '__main__':
 
     # Choose the reference
     # reference = ConstantReference()
-    # reference = PeriodicReference(waveform='sine', frequency=0.10)
+    # reference = PeriodicReference(waveform='sine', frequency=0.02)
     reference = PeriodicReference(waveform='square', frequency=0.10)
 
     # Choose the cost

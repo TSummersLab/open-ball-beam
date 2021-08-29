@@ -70,11 +70,12 @@ class Hardware:
 
             # Saturate action into interval [-1, 1] before passing thru np.arcsin()
             # This will convert the action to a beam angle
-            action_sat = np.clip(action, -1.0, 1.0)
+            action_sat, saturated1 = saturate(action, -1.0, 1.0)
+
             beam_angle = np.arcsin(action_sat)
 
             # Saturate beam angle against the system limits
-            beam_angle, saturated = saturate(beam_angle, BEAM_ANGLE_MIN*DEG2RAD, BEAM_ANGLE_MAX*DEG2RAD)
+            beam_angle, saturated2 = saturate(beam_angle, BEAM_ANGLE_MIN*DEG2RAD, BEAM_ANGLE_MAX*DEG2RAD)
 
             # Convert beam angle to an actuation PWM using the servo calibration polynomial coefficients
             x = beam_angle*BEAM_ANGLE_SCALE
@@ -83,7 +84,9 @@ class Hardware:
             actuation = SERVO_CMD_MID + actuation_deviation
 
             # Saturate actuation PWM against system limits
-            actuation = np.clip(actuation, SERVO_CMD_MIN, SERVO_CMD_MAX)
+            actuation, saturated3 = saturate(actuation, SERVO_CMD_MIN, SERVO_CMD_MAX)
+
+            saturated = saturated1 or saturated2 or saturated3
 
             self.saturated = saturated
             return actuation

@@ -31,7 +31,7 @@ UPDATE_RATE = 1.0/DT  # in Hz
 SERVO_CMD_MID = 1500  # midpoint servo pwm in microseconds
 SERVO_CMD_MIN = SERVO_CMD_MID - 500  # safe minimum servo pwm in microseconds
 SERVO_CMD_MAX = SERVO_CMD_MID + 500  # safe maximum servo pwm in microseconds
-SERVO_CMD_REST = SERVO_CMD_MID + 30  # rest servo pwm, tilt down slightly so ball rolls to end stop
+SERVO_CMD_REST = SERVO_CMD_MID + 50  # rest servo pwm, tilt down slightly so ball rolls to end stop
 
 PWM_SCALE = 0.001
 BEAM_ANGLE_SCALE = 10.0
