@@ -4,8 +4,6 @@
 #include <Arduino.h>
 #include <BasicLinearAlgebra.h>
 
-using namespace BLA;  // Functions in BasicLinearAlgebra are wrapped up inside the namespace BLA
-
 
 // Linear state estimator class
 class LinearEstimator {
@@ -23,8 +21,8 @@ class LinearEstimator {
   
   public:
     LinearEstimator(BLA::Matrix<2, 2> A, BLA::Matrix<2, 1> B, BLA::Matrix<1, 2> C, BLA::Matrix<2, 1> L, float DT);    
-    void update_error(float observation, float setpoint);
-    void update_estimate(float u, bool ball_removed, bool saturated);
+    float update_error(float observation, float setpoint);
+    BLA::Matrix<4> update_estimate(float u, bool ball_removed, bool saturated);
     float get_error();
     BLA::Matrix<4> get_estimate();
 };
@@ -41,8 +39,8 @@ class PIDEstimator {
     
   public:
     PIDEstimator(float error_mix, float error_diff_mix, float DT);
-    void update_error(float observation, float setpoint);
-    void update_estimate(float u, bool ball_removed, bool saturated);
+    float update_error(float observation, float setpoint);
+    BLA::Matrix<4> update_estimate(float u, bool ball_removed, bool saturated);
     float get_error();
     BLA::Matrix<4> get_estimate();
 };

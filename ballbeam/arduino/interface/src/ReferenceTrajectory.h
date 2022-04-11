@@ -7,7 +7,6 @@
 // Reference trajectory class
 class ReferenceTrajectory {
   private:
-    float t;
     float setpoint;
     float setpoint1;
     float setpoint2;
@@ -17,11 +16,10 @@ class ReferenceTrajectory {
     unsigned long wait;    
   
   public:
+    ReferenceTrajectory();
     ReferenceTrajectory(unsigned long wait, float setpoint1, float setpoint2);
-  
-  void update();
-
-  float get_setpoint();
+    float get_setpoint();
+    float update_setpoint();
 };
 
 #endif

@@ -14,7 +14,6 @@ const int SERVO_CMD_MID = 1500;  // in microseconds
 const int SERVO_CMD_MIN = SERVO_CMD_MID - 500;  // in microseconds
 const int SERVO_CMD_MAX = SERVO_CMD_MID + 500;  // in microseconds
 const int SERVO_CMD_REST = SERVO_CMD_MID + 50;  // in microseconds  // make the ball roll down to the end near sensor in the rest state
-
 const int DT = 20;               // in milliseconds
 
 unsigned long now = millis();

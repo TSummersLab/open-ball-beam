@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 
-class Issuer {
+class CommandIssuer {
   private:
     Servo servo;
     unsigned int servo_cmd;
@@ -15,9 +15,10 @@ class Issuer {
     bool saturated;
 
   public:
-    Issuer(Servo servo, unsigned int servo_cmd_mid, unsigned int servo_cmd_min, unsigned int servo_cmd_max);    
+    CommandIssuer(Servo servo);
+    CommandIssuer(Servo servo, unsigned int servo_cmd_mid, unsigned int servo_cmd_min, unsigned int servo_cmd_max);
     void issue_control(float u);
-    unsigned int get_cmd();
+    unsigned int get_command();
     bool get_saturated();
 };
 

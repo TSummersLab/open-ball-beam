@@ -7,9 +7,10 @@ ReadingConverter::ReadingConverter() {
   this->observation = 0.0;
 }
 
-void ReadingConverter::update(int reading) {
+float ReadingConverter::update_observation(int reading) {
   // Convert raw reading to standard observation
   observation = reading2observation(reading);
+  return observation;
 }
 
 float ReadingConverter::get_observation() {

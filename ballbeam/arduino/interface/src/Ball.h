@@ -13,11 +13,11 @@ class Ball {
     long timeout_count;
   
   public:
+    Ball();
     Ball(bool removed, float backstop, long timeout_count);
-
-  void update(float obs);
-  int get_count();
-  bool is_removed();
+    long get_count();
+    bool is_removed();
+    bool update_removed_status(float obs);
 };
 
 #endif

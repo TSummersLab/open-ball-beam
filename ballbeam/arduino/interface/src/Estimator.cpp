@@ -1,30 +1,6 @@
 #include <BasicLinearAlgebra.h>
 #include "Estimator.h"
-
-using namespace BLA;  // Functions in BasicLinearAlgebra are wrapped up inside the namespace BLA
-
-
-
-
-
-
-// TODO move these 2 functions somewhere else since they are general purpose
-
-// Convex combination of two numbers a and b, by mixing ratio x
-float mix(float a, float b, float x){
-  return x*a + (1-x)*b;
-}
-
-// Soft thresholding operation on number a, with threshold x
-// e.g. https://www.mathworks.com/help/wavelet/ref/wthresh.html
-float soft(float a, float x){
-  if (a < -x) { return a + x; }
-  else if (a > x) { return a - x; }
-  else { return 0; }
-}
-
-
-
+#include "transforms.h"
 
 
 ////////////////////////////////////////////////////////////////
@@ -42,12 +18,17 @@ LinearEstimator::LinearEstimator(BLA::Matrix<2, 2> A, BLA::Matrix<2, 1> B, BLA::
   this->error = 0.0;
 }
 
-void LinearEstimator::update_error(float observation, float setpoint) {
+float LinearEstimator::update_error(float observation, float setpoint) {
   // Compute error as difference between observation and setpoint     
     error = observation - setpoint;
+    return error;
 }
 
-void LinearEstimator::update_estimate(float u, bool ball_removed, bool saturated) {
+float LinearEstimator::get_error(){
+  return error;
+}
+
+BLA::Matrix<4> LinearEstimator::update_estimate(float u, bool ball_removed, bool saturated) {
   if (ball_removed)
   {
     // Reset state estimate to zero
@@ -75,15 +56,13 @@ void LinearEstimator::update_estimate(float u, bool ball_removed, bool saturated
     // Put current control input in state 3
     z(3) = u;      
   }   
-}
-
-float LinearEstimator::get_error(){
-  return error;
+  return z;
 }
 
 BLA::Matrix<4> LinearEstimator::get_estimate() {
   return z;
 }
+
 
 
 ////////////////////////////////////////////////////////////////
@@ -97,14 +76,13 @@ PIDEstimator::PIDEstimator(float error_mix, float error_diff_mix, float DT) {
   this->DT = DT;
 }
 
-
-
-void PIDEstimator::update_error(float observation, float setpoint) {
+float PIDEstimator::update_error(float observation, float setpoint) {
   // Compute error as difference between observation and setpoint     
     error = observation - setpoint;
+    return error;
 }
 
-void PIDEstimator::update_estimate(float u, bool ball_removed, bool saturated) {
+BLA::Matrix<4> PIDEstimator::update_estimate(float u, bool ball_removed, bool saturated) {
   if (ball_removed)
   {
     // Reset state estimate to zero
@@ -112,8 +90,7 @@ void PIDEstimator::update_estimate(float u, bool ball_removed, bool saturated) {
   }
   else
   {    
-    float e_change_new = (z(0) - e_last) / DT;
-    
+    float e_change_new = (error - e_last) / DT;    
    
     // Construct full state estimate
     // Put physical state in states 0, 1
@@ -130,7 +107,9 @@ void PIDEstimator::update_estimate(float u, bool ball_removed, bool saturated) {
 
     // Remember variables for next time
     e_last = error;    
-  }   
+    Serial.println(e_last);
+  }
+  return z;
 }
 
 float PIDEstimator::get_error(){

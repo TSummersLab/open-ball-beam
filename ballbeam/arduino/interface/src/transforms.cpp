@@ -1,7 +1,6 @@
 #include "transforms.h"
 #include "constants.h"
 
-
 extern const int SERVO_CMD_MID;
 extern const float READING_OFFSET;
 extern const float READING_SCALE;
@@ -16,6 +15,21 @@ extern const float A2A_COEFFS[];
 extern const float R2O_COEFFS[];
 
 
+// Convex combination of two numbers a and b, by mixing ratio x
+float mix(float a, float b, float x) {
+	return x * a + (1 - x) * b;
+}
+
+
+// Soft thresholding operation on number a, with threshold x
+// e.g. https://www.mathworks.com/help/wavelet/ref/wthresh.html
+float soft(float a, float x) {
+	if (a < -x) { return a + x; }
+	else if (a > x) { return a - x; }
+	else { return 0; }
+}
+
+
 // Degree-5 polynomial evaluation
 // c[] should be a float array with 5+1 elements representing the coefficients of the powers of x in descending degree
 float polyval5(float c[], float x) {
@@ -28,7 +42,7 @@ float polyval5(float c[], float x) {
 }
 
 
-// Invert nonlinearity of sensor using cubic polynomial from calibration data
+// Invert nonlinearity of sensor using polynomial from calibration data
 float reading2observation(int reading) {
   float x = (reading - READING_OFFSET)*READING_SCALE;
   float y = polyval5(R2O_COEFFS, x);
@@ -36,7 +50,7 @@ float reading2observation(int reading) {
 }
 
 
-// Invert nonlinearity of servo using cubic polynomial from calibration data
+// Invert nonlinearity of servo using polynomial from calibration data
 long action2actuation(float u) {
   float uc = constrain(u, -1.0, 1.0);
   float beam_angle = asin(uc);

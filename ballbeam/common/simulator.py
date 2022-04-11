@@ -42,8 +42,22 @@ def step(f, x, u, w, dt=None, method='rk4'):
 
 
 class Simulator:
-    def __init__(self, x0=None, mass=None, mass_scale=None, gravity=None, damp=None, motor_speed=None, transition_rate=None):
-        self.n, self.m, self.p = 3, 1, 1
+    def __init__(self, x0=None, mass=None, mass_scale=None, gravity=None, damp=None,
+                 motor_speed=None, transition_rate=None, servo_assumption='instant'):
+        if servo_assumption == 'instant':
+            n = 2
+            W = np.diag([1e-6, 1e-5])
+        elif servo_assumption == 'speed_limited':
+            n = 3
+            W = np.diag([1e-6, 1e-5, 1e-9])
+        else:
+            raise ValueError
+
+        self.W = W  # process noise covariance
+
+        self.V = np.diag([1e-6])  # sensor noise covariance
+
+        self.n, self.m, self.p = n, 1, 1
 
         if mass is None:
             mass = BALL_MASS
@@ -74,8 +88,7 @@ class Simulator:
             transition_rate = TRANSITION_RATE
         self.transition_rate = transition_rate
 
-        self.W = np.diag([1e-6, 1e-5, 1e-9])  # process noise covariance
-        self.V = np.diag([1e-6])  # sensor noise covariance
+        self.servo_assumption = servo_assumption
 
         if x0 is None:
             x0 = np.zeros(self.n)
@@ -85,7 +98,7 @@ class Simulator:
         self.saturated = False
         self.ball_removed = False
 
-    def generate_process_noise(self, do_kick=True):
+    def generate_process_noise(self, do_kick=False):
         noise = npr.multivariate_normal(np.zeros(self.n), self.W)
         if do_kick:
             kick_mag = 100*npr.choice([0, 1], p=[0.99, 0.01])
@@ -98,13 +111,13 @@ class Simulator:
     def generate_observation_noise(self):
         return npr.multivariate_normal(np.zeros(self.p), self.V)[0]
 
-    def f(self, x, u, servo_assumption='instant'):
+    def f(self, x, u):
         # TODO implement the missing term related to \dot{theta}^2
         # TODO implement deadband for servo commands that do not exceed 3ms PWM difference
 
         sin_u_angle = np.clip(u, -1, 1)
 
-        if servo_assumption == 'instant':
+        if self.servo_assumption == 'instant':
             # This dynamics function assumes the commanded beam angle is achieved instantly
             # x[0]  Ball position
             # x[1]  Ball velocity
@@ -113,7 +126,7 @@ class Simulator:
             return np.array([x[1],
                              -self.gravity_scaled*sin_u_angle - self.damp_scaled*x[1]])
 
-        elif servo_assumption == 'speed_limited':
+        elif self.servo_assumption == 'speed_limited':
             # This dynamics function assumes servo-style tracking of the commanded beam angle
 
             # x[0]  Ball position (m)

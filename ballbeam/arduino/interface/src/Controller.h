@@ -4,15 +4,6 @@
 #include <Arduino.h>
 #include <BasicLinearAlgebra.h>
 
-using namespace BLA;  // Functions in BasicLinearAlgebra are wrapped up inside the namespace BLA
-
-//class Controller {
-//  private:
-//    
-//  public:
-//    
-//
-//};
 
 class LinearController {
   private:
@@ -21,7 +12,7 @@ class LinearController {
   
   public:
     LinearController(BLA::Matrix<1, 4> K);
-    void update(BLA::Matrix<4> z, bool ball_removed);
+    float update_control(BLA::Matrix<4> z, bool ball_removed);
     float get_control();
 };
 
@@ -35,7 +26,7 @@ class PIDController {
   
   public:
     PIDController(float k_p, float k_i, float k_d);
-    void update(BLA::Matrix<4> z, bool ball_removed);
+    float update_control(BLA::Matrix<4> z, bool ball_removed);
     float get_control();
 };
 

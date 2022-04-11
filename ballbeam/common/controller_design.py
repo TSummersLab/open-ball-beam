@@ -62,6 +62,10 @@ R4 = np.diag([4.0])  # control difference
 W2 = np.diag([1e-6, 1e-6])  # position state, velocity state
 V2 = np.diag([1e-5])  # position measurement
 
+# Export controller design parameters
+controller_design_data = dict(A=A4, B=B4, Q=Q4, R=R4)
+pickle_export(dirname_out='.', filename_out='controller_design_data.pickle', data=controller_design_data)
+
 
 # Control & estimator design
 K = dare_gain(A4, B4, Q4, R4)
@@ -71,7 +75,6 @@ L2 = -L2.T
 # Export controller parameters
 controller_data = dict(A=A2, B=B2[:, 0], C=C2[0], K=K[0], L=L2[:, 0])
 pickle_export(dirname_out='.', filename_out='controller_data.pickle', data=controller_data)
-
 
 print_arduino_vector(controller_data['K'], var_name='K')
 print_arduino_vector(controller_data['L'], var_name='L')

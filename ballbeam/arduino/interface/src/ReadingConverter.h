@@ -11,8 +11,8 @@ class ReadingConverter {
 
   public:
     ReadingConverter();
-    void update(int reading);
     float get_observation();
+    float update_observation(int reading);
 };
 
 #endif
