@@ -8,7 +8,7 @@ Existing educational control systems are often
 2. Use proprietary hardware and software
    - Development knowledge is not transferrable to other systems
 
-An alternative 
+OBB offers a viable alternative 
 1. OBB is cheap enough for most individuals and labs
 2. OBB uses open-source and widely available hardware and software
 
