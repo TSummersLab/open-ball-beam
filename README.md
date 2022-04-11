@@ -9,7 +9,7 @@ Existing educational control systems are often
    - Development knowledge is not transferrable to other systems
 
 An alternative 
-1. OBB is cheap enough for any individual or lab
+1. OBB is cheap enough for most individuals and labs
 2. OBB uses open-source and widely available hardware and software
 
 
@@ -44,6 +44,13 @@ It is recommended to use Anaconda or virtualenv to create a separate environment
 
 
 ### Other alternatives
+
+#### Quanser Ball and Beam
+- Commercial product available from https://www.quanser.com/products/ball-and-beam/
+- Price not publicly available, but indications are that the cost runs in the several thousand dollar range https://ftp.esat.kuleuven.be/stadius/barrero/cacsd/www%20and%20mails/EDU_Pricing.pdf
+- Proprietary control software, tethered to a company for support and under-the-hood knowledge
+
+
 #### BOBShield
 Recently BOBShield was proposed
 https://ieeexplore.ieee.org/abstract/document/9454013
