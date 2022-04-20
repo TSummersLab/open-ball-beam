@@ -27,6 +27,7 @@ Python
 - PyQtGraph
 - PySerial
 - Keyboard
+- [ruamel.yaml](https://yaml.readthedocs.io/en/latest/)
 
 Install the dependency packages with the following Conda commands
 - `conda install numpy scipy matplotlib`
