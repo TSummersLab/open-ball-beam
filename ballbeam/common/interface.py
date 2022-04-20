@@ -16,7 +16,7 @@ from ballbeam.common.simulator import Simulator
 from ballbeam.common.hardware import Hardware
 from ballbeam.common.colors import Monokai
 
-from ballbeam.configuration.configs import plot_config
+from ballbeam.configuration.configs import plot_config, interface_config
 
 
 ## PLOTTING
@@ -198,22 +198,50 @@ def update():
     return
 
 
+def choose_system(system_type):
+    if system_type == 'Simulator':
+        return Simulator()
+    elif system_type == 'Hardware':
+        return Hardware()
+    else:
+        raise ValueError
+
+
+def choose_controller(controller_type):
+    if controller_type == 'Null':
+        return Controller()
+    elif controller_type == 'Sine':
+        return SineController()
+    elif controller_type == 'PID':
+        return PIDController()
+    elif controller_type == 'LQG':
+        return LQGController()
+    elif controller_type == 'MPC':
+        return MPCController()
+    else:
+        raise ValueError
+
+
+def choose_reference(reference_type):
+    if reference_type == 'Constant':
+        return ConstantReference()
+    elif reference_type == 'SlowSine':
+        return PeriodicReference(waveform='sine', frequency=0.10)
+    elif reference_type == 'FastSquare':
+        return PeriodicReference(waveform='square', frequency=0.20)
+    else:
+        raise ValueError
+
+
 if __name__ == '__main__':
     # Choose the system type
-    system = Simulator()
-    # system = Hardware()
+    system = choose_system(interface_config.system_type)
 
     # Choose the controller
-    # controller = Controller()
-    # controller = SineController()
-    # controller = PIDController()
-    controller = LQGController()
-    # controller = MPCController()
+    controller = choose_controller(interface_config.controller_type)
 
     # Choose the reference
-    # reference = ConstantReference()
-    reference = PeriodicReference(waveform='sine', frequency=0.2)
-    # reference = PeriodicReference(waveform='square', frequency=0.10)
+    reference = choose_reference(interface_config.reference_type)
 
     # Choose the cost
     cost = Cost()

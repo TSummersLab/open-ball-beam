@@ -1,11 +1,18 @@
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 from ballbeam.common.utility import print_arduino_vector
 from ballbeam.common.extramath import clipped_mean_rows, sparse2dense_coeffs
-from ballbeam.common.pickle_io import pickle_export
-from ballbeam.common.yaml_io import yaml_export
-from ballbeam.configuration.configs import hardware_config, constants_config
+from ballbeam.common.yaml_io import yaml_import, yaml_export
+from ballbeam.common.utility import Dict2Obj
+
+
+this_dir, this_filename = os.path.split(__file__)  # Get path of this file
+
+constants_config = Dict2Obj(yaml_import('constants_config.yaml'))
+hardware_config = Dict2Obj(yaml_import('hardware_config.yaml'))
 
 
 def get_servo_and_imu_data(filename):
@@ -45,7 +52,8 @@ def get_servo_and_imu_data(filename):
 
 
 # Import servo calibration data
-servo_outs, accels = get_servo_and_imu_data('servo_calibration_data.txt')
+servo_calibration_data_path = os.path.join(this_dir, 'servo_calibration_data.txt')
+servo_outs, accels = get_servo_and_imu_data(servo_calibration_data_path)
 mid_idx = np.where(servo_outs == hardware_config.SERVO.CMD.MID)[0][0]
 accel_offset = accels[mid_idx]
 delta_accels = accels - accel_offset
@@ -70,43 +78,44 @@ coefficients = sparse2dense_coeffs(sparse_coefficients, powers)
 
 # Export the coefficients
 data = dict(coefficients=sparse_coefficients, powers=powers)
-yaml_export(data, 'servo_calibration_coefficients.yaml')
-# pickle_export(dirname_out='.', filename_out='servo_calibration_coefficients.pkl', data=coefficients)
-
-# Print for Arduino
-print_arduino_vector(raw_coefficients, var_name='a2a_coeffs')
-
-# plotting for sanity check
-poly = np.poly1d(coefficients)
-xmin, xmax = -8*constants_config.DEG2RAD*hardware_config.BEAM.ANGLE_SCALE, 4*constants_config.DEG2RAD*hardware_config.BEAM.ANGLE_SCALE
-
-plt.close('all')
-plt.figure()
-plt.scatter(x, y, c='b', label='true', zorder=10)
-t = np.linspace(xmin, xmax, 100)
-plt.plot(t, poly(t), lw=2, linestyle='--', color='r', alpha=0.5, label='approx', zorder=1)
-plt.scatter(x, poly(x), s=50, lw=4, color='r', edgecolors='none', alpha=0.8, label='approx')
-plt.xlabel('Beam angle (rad) (scaled)')
-plt.ylabel('Servo pwm (microseconds) (scaled)')
-plt.legend()
-
-handles, labels = plt.gca().get_legend_handles_labels()
-order = [1, 2, 0]
-plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
+yaml_export(data, 'servo_calibration.yaml')
 
 
-plt.figure()
-plt.scatter(x, y-y, c='b', label='true', zorder=10)
-t = np.linspace(xmin, xmax, 100)
-if x[0] > x[1]:
-    x, y = np.flip(x), np.flip(y)
-yt = np.interp(t, x, y)
-plt.plot(t, poly(t)-yt, lw=2, linestyle='--', color='r', alpha=0.5, label='approx', zorder=1)
-plt.scatter(x, poly(x)-y, s=50,  lw=4, edgecolors='none', color='r', alpha=0.8, label='approx')
-plt.xlabel('Beam angle (rad) (scaled)')
-plt.ylabel('Servo pwm error (microseconds) (scaled)')
-plt.legend()
+if __name__ == '__main__':
+    # Print for Arduino
+    print_arduino_vector(raw_coefficients, var_name='a2a_coeffs')
 
-handles, labels = plt.gca().get_legend_handles_labels()
-order = [1, 2, 0]
-plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
+    # Plotting for sanity check
+    poly = np.poly1d(coefficients)
+    xmin, xmax = -8*constants_config.DEG2RAD*hardware_config.BEAM.ANGLE_SCALE, 4*constants_config.DEG2RAD*hardware_config.BEAM.ANGLE_SCALE
+
+    plt.close('all')
+    plt.figure()
+    plt.scatter(x, y, c='b', label='true', zorder=10)
+    t = np.linspace(xmin, xmax, 100)
+    plt.plot(t, poly(t), lw=2, linestyle='--', color='r', alpha=0.5, label='approx', zorder=1)
+    plt.scatter(x, poly(x), s=50, lw=4, color='r', edgecolors='none', alpha=0.8, label='approx')
+    plt.xlabel('Beam angle (rad) (scaled)')
+    plt.ylabel('Servo pwm (microseconds) (scaled)')
+    plt.legend()
+
+    handles, labels = plt.gca().get_legend_handles_labels()
+    order = [1, 2, 0]
+    plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
+
+
+    plt.figure()
+    plt.scatter(x, y-y, c='b', label='true', zorder=10)
+    t = np.linspace(xmin, xmax, 100)
+    if x[0] > x[1]:
+        x, y = np.flip(x), np.flip(y)
+    yt = np.interp(t, x, y)
+    plt.plot(t, poly(t)-yt, lw=2, linestyle='--', color='r', alpha=0.5, label='approx', zorder=1)
+    plt.scatter(x, poly(x)-y, s=50,  lw=4, edgecolors='none', color='r', alpha=0.8, label='approx')
+    plt.xlabel('Beam angle (rad) (scaled)')
+    plt.ylabel('Servo pwm error (microseconds) (scaled)')
+    plt.legend()
+
+    handles, labels = plt.gca().get_legend_handles_labels()
+    order = [1, 2, 0]
+    plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])

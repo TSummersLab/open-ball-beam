@@ -1,6 +1,6 @@
 import os
 
-from ballbeam.common.yaml_io import yaml_import, yaml_export
+from ballbeam.common.yaml_io import yaml_export
 
 this_dir, this_filename = os.path.split(__file__)  # Get path of this file
 
@@ -34,14 +34,11 @@ SERVO_CMD_REST = SERVO_CMD_MID + 50  # rest servo pwm, tilt down slightly so bal
 
 PWM_SCALE = 0.001
 
-servo_calibration_coefficients_path = os.path.join(this_dir, 'servo_calibration_coefficients.yaml')
-
 servo_data = dict(CMD=dict(MID=SERVO_CMD_MID,
                            MIN=SERVO_CMD_MIN,
                            MAX=SERVO_CMD_MAX,
                            REST=SERVO_CMD_REST),
-                  PWM_SCALE=PWM_SCALE,
-                  CALIBRATION=yaml_import(servo_calibration_coefficients_path))
+                  PWM_SCALE=PWM_SCALE)
 
 
 ########################################################################################################################
@@ -60,19 +57,18 @@ beam_data = dict(ANGLE=dict(MIN=BEAM_ANGLE_MIN,
 # Sensor configuration
 DISTANCE_MID = 105  # midpoint of beam rails, in millimeters (250mm rails, each end embedded in 20mm deep rail holders, leaving 210mm exposed, so midpoint is 210mm/2 = 105mm)
 DISTANCE_BACKSTOP = 90  # max distance from midpoint, in millimeters
+DISTANCE_BACKSTOP_MM = 0.001*DISTANCE_BACKSTOP
 
 READING_OFFSET = 142.454545  # get this value from sensor_calibration.py as the raw sensor reading when ball physically at DISTANCE_MID
 READING_SCALE = 0.01
 OBSERVATION_SCALE = 0.01
 
-sensor_calibration_coefficients_path = os.path.join(this_dir, 'sensor_calibration_coefficients.yaml')
-
 sensor_data = dict(DISTANCE=dict(MID=DISTANCE_MID,
-                                 BACKSTOP=DISTANCE_BACKSTOP),
+                                 BACKSTOP=DISTANCE_BACKSTOP,
+                                 BACKSTOP_MM=DISTANCE_BACKSTOP_MM),
                    READING_OFFSET=READING_OFFSET,
                    READING_SCALE=READING_SCALE,
-                   OBSERVATION_SCALE=OBSERVATION_SCALE,
-                   CALIBRATION=yaml_import(sensor_calibration_coefficients_path))
+                   OBSERVATION_SCALE=OBSERVATION_SCALE)
 
 
 ########################################################################################################################

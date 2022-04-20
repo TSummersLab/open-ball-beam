@@ -6,19 +6,17 @@ from serial import Serial
 
 
 from ballbeam.common.extramath import saturate, sparse2dense_coeffs
-from ballbeam.configuration.configs import constants_config, hardware_config
+from ballbeam.configuration.configs import constants_config, hardware_config, servo_calibration_config, sensor_calibration_config
 
 
 class Hardware:
     def __init__(self, ser=None, num_init_reads=3):
         # Configuration
         self.config = hardware_config
-        self.servo_coefficients = sparse2dense_coeffs(self.config.SERVO.CALIBRATION.coefficients,
-                                                      self.config.SERVO.CALIBRATION.powers)
-        self.sensor_coefficients = sparse2dense_coeffs(self.config.SENSOR.CALIBRATION.coefficients,
-                                                       self.config.SENSOR.CALIBRATION.powers)
-
-        self.config.SENSOR.DISTANCE.BACKSTOP_MM = 0.001*self.config.SENSOR.DISTANCE.BACKSTOP
+        self.servo_coefficients = sparse2dense_coeffs(servo_calibration_config.coefficients,
+                                                      servo_calibration_config.powers)
+        self.sensor_coefficients = sparse2dense_coeffs(sensor_calibration_config.coefficients,
+                                                       sensor_calibration_config.powers)
 
         # Initialize variables
         self.observation = None
@@ -29,7 +27,7 @@ class Hardware:
         # Start the serial connection
         if ser is None:
             self.ser = Serial(port=self.config.COMM.PORT,
-                              baud_rate=self.config.COMM.BAUD_RATE,
+                              baudrate=self.config.COMM.BAUD_RATE,
                               timeout=1)
 
         # Check to make sure the hardware is working properly

@@ -1,6 +1,6 @@
 import numpy as np
 
-from ballbeam.common.yaml_io import yaml_import, yaml_export
+from ballbeam.common.yaml_io import yaml_export
 
 
 # Physical constants
