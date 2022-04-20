@@ -29,7 +29,9 @@ Python
 - Keyboard
 
 Install the dependency packages with the following Conda commands
-- `conda install numpy scipy matplotlib pyserial keyboard`
+- `conda install numpy scipy matplotlib`
+- `conda install pyserial keyboard`
+- `conda install ruamel.yaml`
 - `conda install -c conda-forge pyqtgraph`
 
 TODO RL package? stable-baselines3? OQSP for linearized MPC? RRT* planning?
