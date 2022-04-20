@@ -2,9 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from ballbeam.common.utility import print_arduino_vector
-from ballbeam.common.extramath import clipped_mean_rows
+from ballbeam.common.extramath import clipped_mean_rows, sparse2dense_coeffs
 from ballbeam.common.pickle_io import pickle_export
-from ballbeam.common.settings import RAD2DEG, DEG2RAD, SERVO_CMD_MID, STD_GRAVITY_ACCEL, PWM_SCALE, BEAM_ANGLE_SCALE
+from ballbeam.common.yaml_io import yaml_export
+from ballbeam.configuration.configs import hardware_config, constants_config
 
 
 def get_servo_and_imu_data(filename):
@@ -45,42 +46,39 @@ def get_servo_and_imu_data(filename):
 
 # Import servo calibration data
 servo_outs, accels = get_servo_and_imu_data('servo_calibration_data.txt')
-mid_idx = np.where(servo_outs == SERVO_CMD_MID)[0][0]
+mid_idx = np.where(servo_outs == hardware_config.SERVO.CMD.MID)[0][0]
 accel_offset = accels[mid_idx]
 delta_accels = accels - accel_offset
-delta_servo_outs = servo_outs - SERVO_CMD_MID
+delta_servo_outs = servo_outs - hardware_config.SERVO.CMD.MID
 
 # Angles are determined solely from the z-component of the accelerometer readings
-angles = -np.arcsin(delta_accels[:, 2]/STD_GRAVITY_ACCEL)
+angles = -np.arcsin(delta_accels[:, 2]/constants_config.STD_GRAVITY_ACCEL)
 
-x = angles*BEAM_ANGLE_SCALE
-y = delta_servo_outs*PWM_SCALE
+x = angles*hardware_config.BEAM.ANGLE_SCALE
+y = delta_servo_outs*hardware_config.SERVO.PWM_SCALE
 
 # Choose the polynomial powers to use in the least-squares regression
 powers = [5, 4, 3, 2, 1]
-degree = max(powers)
 
 # Form the data matrix
 X = np.vstack([x**power for power in powers]).T
 
 # Least-squares regression
 raw_coefficients = np.linalg.lstsq(X, y, rcond=None)[0]
-
-# Fill missing powers with zeros
-coefficients = np.zeros(degree+1)
-for i in range(degree+1):
-    if i in powers:
-        coefficients[degree-i] = raw_coefficients[powers.index(i)]
+sparse_coefficients = raw_coefficients.tolist()
+coefficients = sparse2dense_coeffs(sparse_coefficients, powers)
 
 # Export the coefficients
-pickle_export(dirname_out='.', filename_out='servo_calibration_coefficients.pkl', data=coefficients)
+data = dict(coefficients=sparse_coefficients, powers=powers)
+yaml_export(data, 'servo_calibration_coefficients.yaml')
+# pickle_export(dirname_out='.', filename_out='servo_calibration_coefficients.pkl', data=coefficients)
 
 # Print for Arduino
 print_arduino_vector(raw_coefficients, var_name='a2a_coeffs')
 
 # plotting for sanity check
 poly = np.poly1d(coefficients)
-xmin, xmax = -8*DEG2RAD*BEAM_ANGLE_SCALE, 4*DEG2RAD*BEAM_ANGLE_SCALE
+xmin, xmax = -8*constants_config.DEG2RAD*hardware_config.BEAM.ANGLE_SCALE, 4*constants_config.DEG2RAD*hardware_config.BEAM.ANGLE_SCALE
 
 plt.close('all')
 plt.figure()

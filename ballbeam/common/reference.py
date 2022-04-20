@@ -1,6 +1,6 @@
 import numpy as np
 
-from ballbeam.common.settings import DT, RAD2DEG
+from ballbeam.configuration.configs import hardware_config
 
 
 # Base class for reference trajectory generators
@@ -29,7 +29,7 @@ class PeriodicReference(ConstantReference):
         self.waveform = waveform
 
     def setpoint(self, t):
-        phase = self.frequency*t*DT
+        phase = self.frequency*t*hardware_config.COMM.DT
         phase_rad = 2*np.pi*phase
         if self.waveform == 'sine':
             deviation = np.sin(phase_rad)

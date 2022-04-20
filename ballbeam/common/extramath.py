@@ -24,3 +24,14 @@ def clipped_mean(x, p=25):
 
 def clipped_mean_rows(x):
     return np.array([clipped_mean(xi) for xi in x])
+
+
+def sparse2dense_coeffs(sparse_coefficients, powers):
+    degree = max(powers)
+
+    # Fill missing powers with zeros
+    coefficients = np.zeros(degree + 1)
+    for i in range(degree + 1):
+        if i in powers:
+            coefficients[degree - i] = sparse_coefficients[powers.index(i)]
+    return coefficients.tolist()

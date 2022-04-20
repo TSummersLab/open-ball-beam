@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from ballbeam.common.utility import print_arduino_vector
 from ballbeam.common.pickle_io import pickle_export
-from ballbeam.common.settings import DT, BALL_MASS, MASS_SCALE, GRAVITY, DAMP
+from ballbeam.configuration.configs import constants_config, hardware_config, model_config
 
 
 def dlyap(A, Q):
@@ -23,27 +23,23 @@ def dare_gain(A, B, Q, R):
     return K
 
 
-# Model data
-gravity_scaled = GRAVITY/MASS_SCALE
-damp_scaled = DAMP/(BALL_MASS*MASS_SCALE)
-
 # Continuous-time model
 Ac = np.array([[0, 1],
-               [0, -damp_scaled]])
+               [0, -model_config.DAMP_SCALED]])
 Bc = np.array([[0],
-               [-gravity_scaled]])
+               [-model_config.GRAVITY_SCALED]])
 Cc = np.array([[1, 0]])
 
 # Convert continuous-time model to discrete-time
 n2, m2, p2 = 2, 1, 1
-A2 = expm(DT*Ac)  # ~= np.eye(n2) + DT*Ac
-B2 = DT*Bc
+A2 = expm(hardware_config.COMM.DT*Ac)  # ~= np.eye(n2) + DT*Ac
+B2 = hardware_config.COMM.DT*Bc
 C2 = np.copy(Cc)
 
 # Add integral control of position via augmented state
 n3, m3, p3 = 3, 1, 1
 A3 = np.block([[A2, np.zeros([n2, 1])],
-               [np.array([DT, 0]), np.array([1])]])
+               [np.array([hardware_config.COMM.DT, 0]), np.array([1])]])
 B3 = np.block([[B2],
                [0]])
 

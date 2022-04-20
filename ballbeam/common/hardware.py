@@ -4,24 +4,22 @@ import struct
 import numpy as np
 from serial import Serial
 
-from ballbeam.common.extramath import saturate
-from ballbeam.common.settings import PORT, BAUD_RATE, DT, DISTANCE_BACKSTOP, TIMEOUT_STEPS, \
-    READING_OFFSET, READING_SCALE, OBSERVATION_SCALE, \
-    RAD2DEG, DEG2RAD, SERVO_CMD_REST, SERVO_CMD_MID, SERVO_CMD_MIN, SERVO_CMD_MAX, \
-    SERVO_CALIBRATION_COEFFICIENTS, SENSOR_CALIBRATION_COEFFICIENTS, \
-    BEAM_ANGLE_MIN, BEAM_ANGLE_MAX, BEAM_ANGLE_SCALE, PWM_SCALE
 
-
-def create_serial(port=None, baud_rate=None, timeout=1):
-    if port is None:
-        port = PORT
-    if baud_rate is None:
-        baud_rate = BAUD_RATE
-    return Serial(port, baud_rate, timeout=timeout)
+from ballbeam.common.extramath import saturate, sparse2dense_coeffs
+from ballbeam.configuration.configs import constants_config, hardware_config
 
 
 class Hardware:
     def __init__(self, ser=None, num_init_reads=3):
+        # Configuration
+        self.config = hardware_config
+        self.servo_coefficients = sparse2dense_coeffs(self.config.SERVO.CALIBRATION.coefficients,
+                                                      self.config.SERVO.CALIBRATION.powers)
+        self.sensor_coefficients = sparse2dense_coeffs(self.config.SENSOR.CALIBRATION.coefficients,
+                                                       self.config.SENSOR.CALIBRATION.powers)
+
+        self.config.SENSOR.DISTANCE.BACKSTOP_MM = 0.001*self.config.SENSOR.DISTANCE.BACKSTOP
+
         # Initialize variables
         self.observation = None
         self.timeout = 0
@@ -30,7 +28,9 @@ class Hardware:
 
         # Start the serial connection
         if ser is None:
-            self.ser = create_serial()
+            self.ser = Serial(port=self.config.COMM.PORT,
+                              baud_rate=self.config.COMM.BAUD_RATE,
+                              timeout=1)
 
         # Check to make sure the hardware is working properly
         for i in range(num_init_reads):
@@ -42,16 +42,16 @@ class Hardware:
     def detect_ball_removed(self):
         # Timeout logic: detect if ball has been removed and cease operation if so, resume if not
         if not self.ball_removed:
-            if self.observation > DISTANCE_BACKSTOP:
+            if self.observation > self.config.SENSOR.DISTANCE.BACKSTOP_MM:
                 self.timeout += 1
             else:
                 self.timeout = 0
         else:
-            if self.observation <= DISTANCE_BACKSTOP:
+            if self.observation <= self.config.SENSOR.DISTANCE.BACKSTOP_MM:
                 self.timeout -= 1
             else:
-                self.timeout = 2*TIMEOUT_STEPS
-        self.ball_removed = self.timeout > TIMEOUT_STEPS
+                self.timeout = 2*self.config.TIMEOUT.STEPS
+        self.ball_removed = self.timeout > self.config.TIMEOUT.STEPS
         return self.ball_removed, self.timeout
 
     def action2actuation(self, action, coefficients=None):
@@ -60,10 +60,10 @@ class Hardware:
         # arg: coefficients, polynomial coefficients in decreasing power order from d down to 0
         # return action, in pwm microseconds for servo
         if self.ball_removed:
-            return SERVO_CMD_MID
+            return self.config.SERVO.CMD.MID
         else:
             if coefficients is None:
-                coefficients = SERVO_CALIBRATION_COEFFICIENTS
+                coefficients = self.servo_coefficients
 
             # # This line makes the linearization assumption that theta = np.sin(theta)
             # beam_angle = action
@@ -75,16 +75,18 @@ class Hardware:
             beam_angle = np.arcsin(action_sat)
 
             # Saturate beam angle against the system limits
-            beam_angle, saturated2 = saturate(beam_angle, BEAM_ANGLE_MIN*DEG2RAD, BEAM_ANGLE_MAX*DEG2RAD)
+            beam_angle, saturated2 = saturate(beam_angle,
+                                              self.config.BEAM.ANGLE.MIN*constants_config.DEG2RAD,
+                                              self.config.BEAM.ANGLE.MAX*constants_config.DEG2RAD)
 
             # Convert beam angle to an actuation PWM using the servo calibration polynomial coefficients
-            x = beam_angle*BEAM_ANGLE_SCALE
+            x = beam_angle*self.config.BEAM.ANGLE_SCALE
             y = np.polyval(coefficients, x)
-            actuation_deviation = int(y/PWM_SCALE)
-            actuation = SERVO_CMD_MID + actuation_deviation
+            actuation_deviation = int(y/self.config.SERVO.PWM_SCALE)
+            actuation = self.config.SERVO.CMD.MID + actuation_deviation
 
             # Saturate actuation PWM against system limits
-            actuation, saturated3 = saturate(actuation, SERVO_CMD_MIN, SERVO_CMD_MAX)
+            actuation, saturated3 = saturate(actuation, self.config.SERVO.CMD.MIN, self.config.SERVO.CMD.MAX)
 
             saturated = saturated1 or saturated2 or saturated3
 
@@ -117,11 +119,11 @@ class Hardware:
         # arg: reading, in millimeters
         # return: observation, in meters
         if coefficients is None:
-            coefficients = SENSOR_CALIBRATION_COEFFICIENTS
+            coefficients = self.sensor_coefficients
 
-        x = (reading - READING_OFFSET)*READING_SCALE
+        x = (reading - self.config.SENSOR.READING_OFFSET)*self.config.SENSOR.READING_SCALE
         y = np.polyval(coefficients, x)
-        observation = (0.001/OBSERVATION_SCALE)*y
+        observation = (0.001/self.config.SENSOR.OBSERVATION_SCALE)*y
         return observation
 
     def observe(self):
@@ -137,9 +139,9 @@ class Hardware:
         time_start = time()
         # give time for ball to roll down
         rest_time_seconds = 2.0
-        rest_steps = int(rest_time_seconds/DT)
+        rest_steps = int(rest_time_seconds/self.config.COMM.DT)
         for i in range(rest_steps):
-            out = struct.pack('h', SERVO_CMD_REST)
+            out = struct.pack('h', self.config.SERVO.CMD.REST)
             self.ser.write(out)
             self.observe()
         time_end = time()

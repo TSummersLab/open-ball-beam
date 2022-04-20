@@ -2,9 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from ballbeam.common.utility import print_arduino_vector
-from ballbeam.common.extramath import clipped_mean_rows
+from ballbeam.common.extramath import clipped_mean_rows, sparse2dense_coeffs
 from ballbeam.common.pickle_io import pickle_export
-from ballbeam.common.settings import DISTANCE_MID, READING_SCALE, OBSERVATION_SCALE
+from ballbeam.common.yaml_io import yaml_export
+from ballbeam.configuration.configs import hardware_config
 
 
 def get_distance_and_sensor_data(filename):
@@ -45,41 +46,39 @@ def get_distance_and_sensor_data(filename):
 
 # Import servo calibration data
 distances, readings, raw_readings = get_distance_and_sensor_data('sensor_calibration_data.txt')
-mid_idx = np.where(distances == DISTANCE_MID)[0][0]
+mid_idx = np.where(distances == hardware_config.SENSOR.DISTANCE.MID)[0][0]
 READING_OFFSET = readings[mid_idx]
 delta_readings = readings - READING_OFFSET
 delta_raw_readings = raw_readings - READING_OFFSET
-delta_distances = distances - DISTANCE_MID
+delta_distances = distances - hardware_config.SENSOR.DISTANCE.MID
 
-x = delta_readings*READING_SCALE
-xs = delta_raw_readings*READING_SCALE
-y = delta_distances*OBSERVATION_SCALE
+x = delta_readings*hardware_config.SENSOR.READING_SCALE
+xs = delta_raw_readings*hardware_config.SENSOR.READING_SCALE
+y = delta_distances*hardware_config.SENSOR.OBSERVATION_SCALE
 
 # Choose the polynomial powers to use in the least-squares regression
 powers = [5, 4, 3, 2, 1]
-degree = max(powers)
+
 
 # Form the data matrix
 X = np.vstack([x**power for power in powers]).T
 
 # Least-squares regression
 raw_coefficients = np.linalg.lstsq(X, y, rcond=None)[0]
-
-# Fill missing powers with zeros
-coefficients = np.zeros(degree+1)
-for i in range(degree+1):
-    if i in powers:
-        coefficients[degree-i] = raw_coefficients[powers.index(i)]
+sparse_coefficients = raw_coefficients.tolist()
+coefficients = sparse2dense_coeffs(sparse_coefficients, powers)
 
 # Export the coefficients
-pickle_export(dirname_out='.', filename_out='sensor_calibration_coefficients.pkl', data=coefficients)
+data = dict(coefficients=sparse_coefficients, powers=powers)
+yaml_export(data, 'sensor_calibration_coefficients.yaml')
+# pickle_export(dirname_out='.', filename_out='sensor_calibration_coefficients.pkl', data=coefficients)
 
 # Print for Arduino
 print_arduino_vector(raw_coefficients, var_name='r2o_coeffs')
 
 # plotting for sanity check
 poly = np.poly1d(coefficients)
-xmin, xmax = -150*READING_SCALE, 150*READING_SCALE
+xmin, xmax = -150*hardware_config.SENSOR.READING_SCALE, 150*hardware_config.SENSOR.READING_SCALE
 
 plt.close('all')
 

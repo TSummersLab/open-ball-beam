@@ -3,18 +3,17 @@ import numpy.random as npr
 import numpy.linalg as la
 
 from ballbeam.common.extramath import saturate
-from ballbeam.common.settings import DT, DEG2RAD, BEAM_ANGLE_MIN, BEAM_ANGLE_MAX, \
-    GRAVITY, BALL_MASS, MASS_SCALE, DAMP, MOTOR_SPEED, TRANSITION_RATE
+from ballbeam.configuration.configs import constants_config, hardware_config, model_config
 
 
 XMIN, XMAX = -0.115, 0.115  # limits of physical position, in meters
 YMIN, YMAX = -0.125, 0.125  # limits of realized position measurement, in meters
-UMIN, UMAX = BEAM_ANGLE_MIN*DEG2RAD, BEAM_ANGLE_MAX*DEG2RAD
+UMIN, UMAX = hardware_config.BEAM.ANGLE.MIN*constants_config.DEG2RAD, hardware_config.BEAM.ANGLE.MAX*constants_config.DEG2RAD
 
 
 def step(f, x, u, w, dt=None, method='rk4'):
     if dt is None:
-        dt = DT
+        dt = hardware_config.COMM.DT
     if method == 'euler':
         x1 = np.copy(x)
         k1 = f(x1, u)
@@ -42,53 +41,23 @@ def step(f, x, u, w, dt=None, method='rk4'):
 
 
 class Simulator:
-    def __init__(self, x0=None, mass=None, mass_scale=None, gravity=None, damp=None,
-                 motor_speed=None, transition_rate=None, servo_assumption='instant'):
-        if servo_assumption == 'instant':
-            n = 2
-            W = np.diag([1e-6, 1e-5])
-        elif servo_assumption == 'speed_limited':
-            n = 3
-            W = np.diag([1e-6, 1e-5, 1e-9])
+    def __init__(self, x0=None, servo_assumption='instant'):
+        # Configuration
+        self.config = model_config
+
+        self.servo_assumption = servo_assumption
+        if self.servo_assumption == 'instant':
+            self.n = 2
+            self.W = np.diag([1e-6, 1e-5])  # process noise covariance
+        elif self.servo_assumption == 'speed_limited':
+            self.n = 3
+            self.W = np.diag([1e-6, 1e-5, 1e-9])
         else:
             raise ValueError
 
-        self.W = W  # process noise covariance
-
         self.V = np.diag([1e-6])  # sensor noise covariance
 
-        self.n, self.m, self.p = n, 1, 1
-
-        if mass is None:
-            mass = BALL_MASS
-        self.mass = mass  # kilograms
-
-        if mass_scale is None:
-            mass_scale = MASS_SCALE
-        self.mass_scale = mass_scale  # meters/second/second
-
-        if gravity is None:
-            gravity = GRAVITY
-        self.gravity = gravity  # meters/second/second
-        self.gravity_scaled = self.gravity/self.mass_scale
-
-        if damp is None:
-            damp = DAMP
-        self.damp = damp  # 1/second
-
-        self.damp_scaled = self.damp/(self.mass*self.mass_scale)
-
-        if motor_speed is None:
-            motor_speed = MOTOR_SPEED
-        self.motor_speed = motor_speed  # rad/sec
-
-        # Transition rate controls how fast np.tanh() switches from from -1 to +1
-        # i.e. higher transition rate gives a better approximation of np.sign() by np.tanh(), but less smooth
-        if transition_rate is None:
-            transition_rate = TRANSITION_RATE
-        self.transition_rate = transition_rate
-
-        self.servo_assumption = servo_assumption
+        self.m, self.p = 1, 1
 
         if x0 is None:
             x0 = np.zeros(self.n)
@@ -124,7 +93,7 @@ class Simulator:
             # u     Sine of commanded beam angle
 
             return np.array([x[1],
-                             -self.gravity_scaled*sin_u_angle - self.damp_scaled*x[1]])
+                             -self.config.GRAVITY_SCALED*sin_u_angle - self.config.DAMP_SCALED*x[1]])
 
         elif self.servo_assumption == 'speed_limited':
             # This dynamics function assumes servo-style tracking of the commanded beam angle
@@ -138,11 +107,11 @@ class Simulator:
 
             # Make the servo speed function
             def speed_fun(x, hard=True):
-                return np.sign(x) if hard else np.tanh(self.transition_rate*x)
+                return np.sign(x) if hard else np.tanh(self.config.TRANSITION_RATE*x)
 
             return np.array([x[1],
-                             -self.gravity_scaled*np.sin(x[2]) - self.damp_scaled*x[1],
-                             self.motor_speed*speed_fun(u_angle - x[2])])
+                             -self.config.GRAVITY_SCALED*np.sin(x[2]) - self.config.DAMP_SCALED*x[1],
+                             self.config.MOTOR_SPEED*speed_fun(u_angle - x[2])])
 
     def process(self, u):
         u, self.saturated = saturate(u, UMIN, UMAX)

@@ -2,15 +2,21 @@ import os
 
 import numpy as np
 
+from ballbeam.common.mpc_design import get_mpc_design_data
+# from ballbeam.common.mpc import make_problem, mpc_control
+from ballbeam.common.mpc_osqp_codegen import make_base_bounds, mpc_control
+
 from ballbeam.common.extramath import mix, saturate
-from ballbeam.common.settings import DT, RAD2DEG
 from ballbeam.common.pickle_io import pickle_import
+from ballbeam.configuration.configs import constants_config, hardware_config
 
 
 class Controller:
     def __init__(self):
         self._u = 0.0  # control action
         self._z = np.zeros(4)  # augmented state estimate
+        self.saturated = False
+        self.ball_removed = False
 
     def update_aux(self, saturated=False, ball_removed=False):
         # arg: saturated, boolean, true if actuator is currently saturated
@@ -23,7 +29,7 @@ class Controller:
         # arg: observation, in meters
         # arg: setpoint, target observation in meters
         # arg: t, time index since start
-        pass
+        return
 
     @property
     def action(self):
@@ -46,8 +52,8 @@ class SineController(Controller):
         self.beam_angle_max_deg = beam_angle_max_deg  # in degrees
 
     def update(self, observation, setpoint, t):
-        beam_angle_max_rad = self.beam_angle_max_deg/RAD2DEG
-        self._u = beam_angle_max_rad*np.sin(2*np.pi*self.freq*t*DT)
+        beam_angle_max_rad = self.beam_angle_max_deg/constants_config.RAD2DEG
+        self._u = beam_angle_max_rad*np.sin(2*np.pi*self.freq*t*hardware_config.DT)
 
 
 # PID with exponential smoothing filters
@@ -70,7 +76,7 @@ class PIDController(Controller):
         error_new = observation - setpoint
         self.error = mix(error_new, self.error, self.error_mix)
 
-        error_diff_new = (error_new - self.error_last)/DT
+        error_diff_new = (error_new - self.error_last)/hardware_config.DT
         self.error_diff = mix(error_diff_new, self.error_diff, self.error_diff_mix)
 
         # Control
@@ -85,7 +91,7 @@ class PIDController(Controller):
         if anti_windup and self.saturated:
             pass
         else:
-            self.error_sum += self.error*DT
+            self.error_sum += self.error*hardware_config.DT
         self.error_last = self.error
 
 
@@ -147,7 +153,7 @@ class LQGController(Controller):
             if anti_windup and self.saturated:
                 pass
             else:
-                self.error_sum += self.error*DT
+                self.error_sum += self.error*hardware_config.COMM.DT
 
             # State estimate using LQE
             # x is the physical state estimate
@@ -162,13 +168,74 @@ class LQGController(Controller):
             self._u += du
 
 
+# class MPCController(Controller):
+#     def __init__(self, controller_data_path=None):
+#         super().__init__()
+#         self.error = 0
+#         self.error_sum = 0
+#
+#         if controller_data_path is None:
+#             this_dir, this_filename = os.path.split(__file__)  # Get path of data.pkl
+#             controller_data_path = os.path.join(this_dir, 'controller_data.pickle')
+#
+#         controller_data = pickle_import(controller_data_path)
+#
+#         self.A = controller_data['A']
+#         self.B = controller_data['B']
+#         self.C = controller_data['C']
+#         self.K = controller_data['K']
+#         self.L = controller_data['L']
+#
+#         self.AL = self.A - np.dot(self.L[:, None], self.C[None, :])
+#
+#         # Form optimization problem
+#         controller_data_path = os.path.join(this_dir, 'controller_design_data.pickle')
+#         controller_design_data = pickle_import(controller_data_path)
+#
+#         A4, B4, Q4, R4 = [controller_design_data[key] for key in ['A', 'B', 'Q', 'R']]
+#         QN4 = 2*Q4
+#
+#         xmax = np.array([1.0, 10.0, 100.0, 0.08])  # position (m), velocity (m/s), integral of position (m), control effort (rad)
+#         xmin = -xmax
+#         umax = np.array([1.0])  # control difference (rad)
+#         umin = -umax
+#
+#         # Prediction horizon
+#         N = 10
+#
+#         self.x_init, self.u_var, self.prob = make_problem(A4, B4, Q4, QN4, R4, xmin, xmax, umin, umax, N)
+#
+#     def update(self, observation, setpoint, t, anti_windup=True):
+#         if self.ball_removed:
+#             self.error = 0
+#             self.error_sum = 0
+#         else:
+#             # Update error based on current observation and setpoint
+#             self.error = observation - setpoint
+#
+#             # Update error sum
+#             if anti_windup and self.saturated:
+#                 pass
+#             else:
+#                 self.error_sum += self.error*hardware_config.DT
+#
+#             # State estimate using LQE
+#             # x is the physical state estimate
+#             # z is the augmented state estimate, which is the physical state augmented with the error_sum and action
+#             # LQE is only needed for x since error_sum and action are known exactly
+#             x = self._z[0:2]
+#             x = np.dot(self.AL, x) + np.dot(self.B, self._u) + np.dot(self.L, self.error)
+#             self._z = np.hstack([x, self.error_sum, self._u])
+#
+#             # Solve optimization problem
+#             du = mpc_control(self._z, self.x_init, self.u_var, self.prob)[0]
+#             self._u += du
+
+
+
 class MPCController(Controller):
     def __init__(self, controller_data_path=None):
         super().__init__()
-
-        # TODO implement
-        raise NotImplementedError
-
         self.error = 0
         self.error_sum = 0
 
@@ -181,14 +248,48 @@ class MPCController(Controller):
         self.A = controller_data['A']
         self.B = controller_data['B']
         self.C = controller_data['C']
+        self.K = controller_data['K']
+        self.L = controller_data['L']
+
+        self.AL = self.A - np.dot(self.L[:, None], self.C[None, :])
+
+        controller_data_path = os.path.join(this_dir, 'controller_design_data.pickle')
+        controller_design_data = pickle_import(controller_data_path)
+
+        A4, B4, Q4, R4 = [controller_design_data[key] for key in ['A', 'B', 'Q', 'R']]
+
+        xmin, xmax, umin, umax, N = get_mpc_design_data()
+        self.N = N
+
+        nx, nu = B4.shape
+        self.nx, self.nu = nx, nu
+
+        l_base, u_base = make_base_bounds(nx, nu, xmin, xmax, umin, umax, N)
+
+        self.l_base, self.u_base = l_base, u_base
 
     def update(self, observation, setpoint, t, anti_windup=True):
-        # Form optimization problem
+        if self.ball_removed:
+            self.error = 0
+            self.error_sum = 0
+        else:
+            # Update error based on current observation and setpoint
+            self.error = observation - setpoint
 
-        # Solve optimization problem
+            # Update error sum
+            if anti_windup and self.saturated:
+                pass
+            else:
+                self.error_sum += self.error*hardware_config.DT
 
-        # Use the first control input in the plan and throw the rest away
-        # u = u_plan[0]
-        # return u
+            # State estimate using LQE
+            # x is the physical state estimate
+            # z is the augmented state estimate, which is the physical state augmented with the error_sum and action
+            # LQE is only needed for x since error_sum and action are known exactly
+            x = self._z[0:2]
+            x = np.dot(self.AL, x) + np.dot(self.B, self._u) + np.dot(self.L, self.error)
+            self._z = np.hstack([x, self.error_sum, self._u])
 
-        pass
+            # Solve optimization problem
+            du = mpc_control(self._z, self.l_base, self.u_base, self.nx, self.nu, self.N)[0]
+            self._u += du
