@@ -39,6 +39,17 @@ Install the dependency packages with the following Conda commands
 TODO RL package? stable-baselines3? OQSP for linearized MPC? RRT* planning?
 
 ## Installation
+
+
+### Arduino
+1. Install the [Arduino IDE](https://www.arduino.cc/en/software)
+2. Install [Servo library](https://www.arduino.cc/reference/en/libraries/servo/) (may be installed already with the Arduino IDE)
+    - Use the `Manage Libraries...` dialog in the Arduino IDE
+3. [Polulu VL53L0X library](https://github.com/pololu/vl53l0x-arduino)
+    - Use the `Manage Libraries...` dialog in the Arduino IDE
+    - Be sure to use the Polulu library and NOT the Adafruit Library (regardless of whether the Polulu or the Adafruit physical hardware is used)
+
+### Python
 It is recommended to use Anaconda or virtualenv to create a separate environment to install in.
 
 1. Activate the desired environment
@@ -47,7 +58,7 @@ It is recommended to use Anaconda or virtualenv to create a separate environment
 4. Run the command `pip install .`
 
 
-### Other alternatives
+# Alternative Ball and Beam Systems
 
 #### Quanser Ball and Beam
 - Commercial product available from https://www.quanser.com/products/ball-and-beam/
@@ -87,4 +98,3 @@ Drawbacks of BOBShield under OBB:
   - ToF sensor not able to function properly due to occlusions (harder to sense)
 - There is no IMU sensor
   - Cannot automatically calibrate servo angle against Earth's gravity
-
