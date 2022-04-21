@@ -20,6 +20,8 @@ Arduino
 - [Arduino IDE](https://www.arduino.cc/en/software)
 - [Servo library](https://www.arduino.cc/reference/en/libraries/servo/)
 - [Polulu VL53L0X library](https://github.com/pololu/vl53l0x-arduino)
+- [Adafruit_LSM6DS](https://github.com/adafruit/Adafruit_LSM6DS)
+- [BasicLinearAlgebra](https://www.arduino.cc/reference/en/libraries/basiclinearalgebra/)
 
 Python
 - [NumPy](https://numpy.org/)
@@ -29,14 +31,16 @@ Python
 - [PySerial](https://pythonhosted.org/pyserial/)
 - [Keyboard](https://pypi.org/project/keyboard/)
 - [ruamel.yaml](https://yaml.readthedocs.io/en/latest/)
+- [OSQP](https://osqp.org/)
 
 Install the dependency packages with the following Conda commands
 - `conda install numpy scipy matplotlib`
 - `conda install pyserial keyboard`
 - `conda install ruamel.yaml`
 - `conda install -c conda-forge pyqtgraph`
+- `conda install -c conda-forge osqp`
 
-TODO RL package? stable-baselines3? OQSP for linearized MPC? RRT* planning?
+TODO RL package? stable-baselines3? RRT* planning?
 
 ## Installation
 
@@ -48,6 +52,14 @@ TODO RL package? stable-baselines3? OQSP for linearized MPC? RRT* planning?
 3. [Polulu VL53L0X library](https://github.com/pololu/vl53l0x-arduino)
     - Use the `Manage Libraries...` dialog in the Arduino IDE
     - Be sure to use the Polulu library and NOT the Adafruit Library (regardless of whether the Polulu or the Adafruit physical hardware is used)
+4. [Adafruit_LSM6DS](https://github.com/adafruit/Adafruit_LSM6DS)
+    - Use the `Manage Libraries...` dialog in the Arduino IDE
+    - Search for `Adafruit LSM6DS`
+    - Select `Install All`
+5. [BasicLinearAlgebra](https://www.arduino.cc/reference/en/libraries/basiclinearalgebra/)
+    - Use the `Manage Libraries...` dialog in the Arduino IDE
+    - Search for `BasicLinearAlgebra`
+7. When using `Tools -> Serial Monitor` make sure to use 115200 baud rate.
 
 ### Python
 It is recommended to use Anaconda or virtualenv to create a separate environment to install in.
