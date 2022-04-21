@@ -6,9 +6,7 @@ import matplotlib.pyplot as plt
 from ballbeam.common.utility import print_arduino_vector
 from ballbeam.common.extramath import clipped_mean_rows, sparse2dense_coeffs
 from ballbeam.configurators.configurators import Configurator
-
-
-this_dir, this_filename = os.path.split(__file__)  # Get path of this file
+from ballbeam.static import CALIBRATION_PATH
 
 
 def get_servo_and_imu_data(filename):
@@ -50,7 +48,7 @@ def make_servo_calibration_configurator(constants_configurator, hardware_configu
     hardware_config = hardware_configurator.data_obj
 
     # Import servo calibration data
-    servo_calibration_data_path = os.path.join(this_dir, '../calibration/servo_calibration_data.txt')
+    servo_calibration_data_path = CALIBRATION_PATH.joinpath('servo_calibration_data.txt')
     servo_outs, accels = get_servo_and_imu_data(servo_calibration_data_path)
     mid_idx = np.where(servo_outs == hardware_config.SERVO.CMD.MID)[0][0]
     accel_offset = accels[mid_idx]
@@ -122,7 +120,8 @@ def make_servo_calibration_configurator(constants_configurator, hardware_configu
 if __name__ == '__main__':
     plt.close('all')
 
-    from ballbeam.configurators.configurators import make_hardware_configurator, make_constants_configurator
+    from ballbeam.configurators.constants_configurator import make_constants_configurator
+    from ballbeam.configurators.hardware_configurator import make_hardware_configurator
     constants_configurator = make_constants_configurator()
     hardware_configurator = make_hardware_configurator()
 

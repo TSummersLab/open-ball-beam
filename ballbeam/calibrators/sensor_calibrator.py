@@ -6,9 +6,7 @@ import matplotlib.pyplot as plt
 from ballbeam.common.utility import print_arduino_vector
 from ballbeam.common.extramath import clipped_mean_rows, sparse2dense_coeffs
 from ballbeam.configurators.configurators import Configurator
-
-
-this_dir, this_filename = os.path.split(__file__)  # Get path of this file
+from ballbeam.static import CALIBRATION_PATH
 
 
 def get_distance_and_sensor_data(filename):
@@ -53,11 +51,11 @@ def make_sensor_calibration_configurator(constants_configurator, hardware_config
     constants_config = constants_configurator.data_obj
     hardware_config = hardware_configurator.data_obj
 
-    # Import servo calibration data
-    sensor_calibration_data_path = os.path.join(this_dir, '../calibration/sensor_calibration_data.txt')
+    # Import sensor calibration data
+    sensor_calibration_data_path = CALIBRATION_PATH.joinpath('sensor_calibration_data.txt')
     distances, readings, raw_readings = get_distance_and_sensor_data(sensor_calibration_data_path)
     mid_idx = np.where(distances == hardware_config.SENSOR.DISTANCE.MID)[0][0]
-    READING_OFFSET = readings[mid_idx]
+    READING_OFFSET = float(readings[mid_idx])
     delta_readings = readings - READING_OFFSET
     delta_raw_readings = raw_readings - READING_OFFSET
     delta_distances = distances - hardware_config.SENSOR.DISTANCE.MID
@@ -118,6 +116,7 @@ def make_sensor_calibration_configurator(constants_configurator, hardware_config
         handles, labels = plt.gca().get_legend_handles_labels()
         order = [1, 2, 0]
         plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
+    plt.show()
 
     name = 'sensor_calibration'
     data = dict(coefficients=sparse_coefficients, powers=powers, READING_OFFSET=READING_OFFSET)
@@ -128,8 +127,8 @@ def make_sensor_calibration_configurator(constants_configurator, hardware_config
 if __name__ == '__main__':
     plt.close('all')
 
-    from ballbeam.configurators.configurators import make_hardware_configurator, make_constants_configurator
-
+    from ballbeam.configurators.constants_configurator import make_constants_configurator
+    from ballbeam.configurators.hardware_configurator import make_hardware_configurator
     constants_configurator = make_constants_configurator()
     hardware_configurator = make_hardware_configurator()
 

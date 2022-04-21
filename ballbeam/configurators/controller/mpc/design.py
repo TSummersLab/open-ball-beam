@@ -24,7 +24,7 @@ def make_design_data():
     # Constraints
     xmax = np.array([1.0, 10.0, 100.0, 0.08])  # position (m), velocity (m/s), integral of position (m), control effort (rad)
     xmin = -xmax
-    umax = np.array([1.0])  # control difference (rad)
+    umax = np.array([0.1])  # control difference (rad)
     umin = -umax
 
     constraint_design_data = dict(xmin=xmin, xmax=xmax, umin=umin, umax=umax)

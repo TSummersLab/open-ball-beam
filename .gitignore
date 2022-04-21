@@ -1,4 +1,4 @@
-ballbeam/configuration/
+ballbeam/configuration/*
 ballbeam/*.pyd
 
 # PyCharm
