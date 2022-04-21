@@ -38,5 +38,3 @@ def make_model_configurator(constants_configurator):
                 MOTOR_SPEED=MOTOR_SPEED,
                 TRANSITION_RATE=TRANSITION_RATE)
     return Configurator(name, data, description)
-
-

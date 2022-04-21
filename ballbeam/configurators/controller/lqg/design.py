@@ -66,7 +66,7 @@ def make_design_data():
     controller_design_data = dict(controller=dict(A4=A4, B2=B2, B4=B4, Q4=Q4, R4=R4),
                                   estimator=dict(A2=A2, C2=C2, W2=W2, V2=V2))
 
-    pickle_export(dirname_out=dirname_out, filename_out='../../../configuration/controller/lqg/design_data.pickle', data=controller_design_data)
+    pickle_export(dirname_out=dirname_out, filename_out='design_data.pickle', data=controller_design_data)
     return controller_design_data
 
 
@@ -82,14 +82,14 @@ def make_controller_params(show_print_arduino=False):
     L2 = -L2.T
 
     # Export controller parameters
-    controller_data = dict(A=A2, B=B2[:, 0], C=C2[0], K=K4[0], L=L2[:, 0])
-    pickle_export(dirname_out=dirname_out, filename_out='../../../configuration/controller/lqg/controller_params.pickle', data=controller_data)
+    controller_params = dict(A=A2, B=B2[:, 0], C=C2[0], K=K4[0], L=L2[:, 0])
+    pickle_export(dirname_out=dirname_out, filename_out='controller_params.pickle', data=controller_params)
 
     if show_print_arduino:
-        print_arduino_vector(controller_data['K'], var_name='K')
-        print_arduino_vector(controller_data['L'], var_name='L')
+        print_arduino_vector(controller_params['K'], var_name='K')
+        print_arduino_vector(controller_params['L'], var_name='L')
 
-    return K4, L2
+    return controller_params
 
 
 def main(show=False):

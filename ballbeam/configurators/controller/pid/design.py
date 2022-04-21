@@ -14,7 +14,7 @@ def make_controller_params():
                            error_mix=0.50,
                            error_diff_mix=0.25,
                            anti_windup=True)
-    pickle_export(dirname_out=dirname_out, filename_out='../../../configuration/controller/pid/controller_params.pickle', data=controller_data)
+    pickle_export(dirname_out=dirname_out, filename_out='controller_params.pickle', data=controller_data)
 
 
 def main():
