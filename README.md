@@ -21,7 +21,7 @@ Arduino
 - [Servo library](https://www.arduino.cc/reference/en/libraries/servo/)
 - [Polulu VL53L0X library](https://github.com/pololu/vl53l0x-arduino)
 - [Adafruit_LSM6DS](https://github.com/adafruit/Adafruit_LSM6DS)
-- [BasicLinearAlgebra]()
+- [BasicLinearAlgebra](https://www.arduino.cc/reference/en/libraries/basiclinearalgebra/)
 
 Python
 - [NumPy](https://numpy.org/)
@@ -56,7 +56,7 @@ TODO RL package? stable-baselines3? RRT* planning?
     - Use the `Manage Libraries...` dialog in the Arduino IDE
     - Search for `Adafruit LSM6DS`
     - Select `Install All`
-5. [BasicLinearAlgebra]()
+5. [BasicLinearAlgebra](https://www.arduino.cc/reference/en/libraries/basiclinearalgebra/)
     - Use the `Manage Libraries...` dialog in the Arduino IDE
     - Search for `BasicLinearAlgebra`
 7. When using `Tools -> Serial Monitor` make sure to use 115200 baud rate.
