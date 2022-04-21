@@ -1,9 +1,8 @@
 import sys
-from time import time, sleep
+from time import time
 from dataclasses import dataclass
 
 import numpy as np
-
 import PyQt5
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
@@ -15,11 +14,9 @@ from ballbeam.common.cost import Cost
 from ballbeam.common.simulator import Simulator
 from ballbeam.common.hardware import Hardware
 from ballbeam.common.colors import Monokai
+from ballbeam.configurators.configs import plot_config, interface_config
 
-from ballbeam.configuration.configs import plot_config, interface_config
 
-
-## PLOTTING
 def center_qt_window(win):
     frameGm = win.frameGeometry()
     screen = PyQt5.QtWidgets.QApplication.desktop().screenNumber(PyQt5.QtWidgets.QApplication.desktop().cursor().pos())
@@ -81,7 +78,7 @@ class MyPlotData:
         self.plot.setYRange(ymin, ymax, padding=0)
         self.num_curves = len(names)
         if self.scrolling:
-            self.datas = [np.zeros(plot_config.LENGTH) for i in range(self.num_curves)]
+            self.datas = [np.zeros(plot_config.LENGTH_STEPS) for i in range(self.num_curves)]
         else:
             self.datas = [np.zeros(1) for i in range(self.num_curves)]
         self.curves = [self.plot.plot(data, pen=pen, name=name) for data, pen, name in zip(self.datas, pens, names)]
@@ -136,7 +133,7 @@ def update_plot_data(plot_data_dict, data):
                     plot_data.datas[i][:-1] = plot_data.datas[i][1:]  # shift data in the array one sample left  # (see also: np.roll)
                     plot_data.datas[i][-1] = new_vals[i]  # add the new value to the end
                     plot_data.curves[i].setData(plot_data.datas[i])  # update the data in each curve
-                plot_data.curves[i].setPos(t - plot_config.LENGTH, 0)  # shift the x range of each curve to achieve the scrolling effect
+                plot_data.curves[i].setPos(t - plot_config.LENGTH_STEPS, 0)  # shift the x range of each curve to achieve the scrolling effect
             else:
                 if i < plot_data.num_curves - 1:
                     plot_data.datas[i] = np.append(plot_data.datas[i], new_vals[i])  # shift data in the array one sample left  # (see also: np.roll)
@@ -204,7 +201,7 @@ def choose_system(system_type):
     elif system_type == 'Hardware':
         return Hardware()
     else:
-        raise ValueError
+        raise ValueError('Invalid system type chosen!')
 
 
 def choose_controller(controller_type):
@@ -219,7 +216,7 @@ def choose_controller(controller_type):
     elif controller_type == 'MPC':
         return MPCController()
     else:
-        raise ValueError
+        raise ValueError('Invalid controller type chosen!')
 
 
 def choose_reference(reference_type):
@@ -230,7 +227,14 @@ def choose_reference(reference_type):
     elif reference_type == 'FastSquare':
         return PeriodicReference(waveform='square', frequency=0.20)
     else:
-        raise ValueError
+        raise ValueError('Invalid reference trajectory type chosen!')
+
+
+def choose_cost(cost_type):
+    if cost_type == 'Default':
+        return Cost()
+    else:
+        raise ValueError('Invalid cost type chosen!')
 
 
 if __name__ == '__main__':
@@ -244,7 +248,7 @@ if __name__ == '__main__':
     reference = choose_reference(interface_config.reference_type)
 
     # Choose the cost
-    cost = Cost()
+    cost = choose_cost(interface_config.cost_type)
 
     # Initialization
     time_start = time()

@@ -6,13 +6,14 @@ from serial import Serial
 
 
 from ballbeam.common.extramath import saturate, sparse2dense_coeffs
-from ballbeam.configuration.configs import constants_config, hardware_config, servo_calibration_config, sensor_calibration_config
+from ballbeam.configurators.configs import constants_config, hardware_config, servo_calibration_config, sensor_calibration_config
 
 
 class Hardware:
     def __init__(self, ser=None, num_init_reads=3):
         # Configuration
         self.config = hardware_config
+        self.reading_offset = sensor_calibration_config.READING_OFFSET
         self.servo_coefficients = sparse2dense_coeffs(servo_calibration_config.coefficients,
                                                       servo_calibration_config.powers)
         self.sensor_coefficients = sparse2dense_coeffs(sensor_calibration_config.coefficients,
@@ -119,7 +120,7 @@ class Hardware:
         if coefficients is None:
             coefficients = self.sensor_coefficients
 
-        x = (reading - self.config.SENSOR.READING_OFFSET)*self.config.SENSOR.READING_SCALE
+        x = (reading - self.reading_offset)*self.config.SENSOR.READING_SCALE
         y = np.polyval(coefficients, x)
         observation = (0.001/self.config.SENSOR.OBSERVATION_SCALE)*y
         return observation

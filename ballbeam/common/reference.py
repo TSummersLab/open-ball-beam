@@ -1,6 +1,6 @@
 import numpy as np
 
-from ballbeam.configuration.configs import hardware_config
+from ballbeam.configurators.configs import hardware_config
 
 
 # Base class for reference trajectory generators

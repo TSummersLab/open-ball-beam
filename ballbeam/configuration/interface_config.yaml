@@ -1,0 +1,4 @@
+controller_type: LQG
+cost_type: Default
+reference_type: FastSquare
+system_type: Simulator

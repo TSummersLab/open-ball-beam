@@ -6,9 +6,10 @@ from ballbeam.common.mpc_design import get_mpc_design_data
 # from ballbeam.common.mpc import make_problem, mpc_control
 from ballbeam.common.mpc_osqp_codegen import make_base_bounds, mpc_control
 
-from ballbeam.common.extramath import mix, saturate
+from ballbeam.common.extramath import mix
 from ballbeam.common.pickle_io import pickle_import
-from ballbeam.configuration.configs import constants_config, hardware_config
+from ballbeam.configurators.configs import constants_config, hardware_config
+from ballbeam.static import CONFIGURATION_PATH
 
 
 class Controller:
@@ -58,21 +59,27 @@ class SineController(Controller):
 
 # PID with exponential smoothing filters
 class PIDController(Controller):
-    def __init__(self, kp=0.5, ki=0.1, kd=0.25, error_mix=0.50, error_diff_mix=0.25):
+    def __init__(self, controller_params_path=None):
         super().__init__()
-        self.kp = kp
-        self.ki = ki
-        self.kd = kd
+        if controller_params_path is None:
+            controller_params_path = CONFIGURATION_PATH.joinpath('controller', 'pid', 'controller_params.pickle')
+        controller_params = pickle_import(controller_params_path)
 
-        self.error_mix = error_mix
-        self.error_diff_mix = error_diff_mix
+        self.kp = controller_params['kp']
+        self.ki = controller_params['ki']
+        self.kd = controller_params['kd']
+
+        self.error_mix = controller_params['error_mix']
+        self.error_diff_mix = controller_params['error_diff_mix']
+
+        self.anti_windup = controller_params['anti_windup']
 
         self.error = 0
         self.error_sum = 0
         self.error_last = 0
         self.error_diff = 0
 
-    def update(self, observation, setpoint, t, anti_windup=True):
+    def update(self, observation, setpoint, t):
         error_new = observation - setpoint
         self.error = mix(error_new, self.error, self.error_mix)
 
@@ -88,7 +95,7 @@ class PIDController(Controller):
         # State estimate
         self._z = np.array([self.error, self.error_diff, self.error_sum, self._u])
 
-        if anti_windup and self.saturated:
+        if self.anti_windup and self.saturated:
             pass
         else:
             self.error_sum += self.error*hardware_config.DT
@@ -97,24 +104,22 @@ class PIDController(Controller):
 
 # Linear quadratic Gaussian with integral feedback & control difference penalization
 class LQGController(Controller):
-    def __init__(self, controller_data_path=None):
+    def __init__(self, controller_params_path=None):
         super().__init__()
-        self.error = 0
-        self.error_sum = 0
+        if controller_params_path is None:
+            controller_params_path = CONFIGURATION_PATH.joinpath('controller', 'lqg', 'controller_params.pickle')
+        controller_params = pickle_import(controller_params_path)
 
-        if controller_data_path is None:
-            this_dir, this_filename = os.path.split(__file__)  # Get path of data.pkl
-            controller_data_path = os.path.join(this_dir, 'controller_data.pickle')
-
-        controller_data = pickle_import(controller_data_path)
-
-        self.A = controller_data['A']
-        self.B = controller_data['B']
-        self.C = controller_data['C']
-        self.K = controller_data['K']
-        self.L = controller_data['L']
+        self.A = controller_params['A']
+        self.B = controller_params['B']
+        self.C = controller_params['C']
+        self.K = controller_params['K']
+        self.L = controller_params['L']
 
         self.AL = self.A - np.dot(self.L[:, None], self.C[None, :])
+
+        self.error = 0
+        self.error_sum = 0
 
     # def update(self, observation, setpoint, t, anti_windup=True):
     #     if self.ball_removed:
@@ -169,28 +174,28 @@ class LQGController(Controller):
 
 
 # class MPCController(Controller):
-#     def __init__(self, controller_data_path=None):
+#     def __init__(self, controller_params_path=None):
 #         super().__init__()
 #         self.error = 0
 #         self.error_sum = 0
 #
-#         if controller_data_path is None:
+#         if controller_params_path is None:
 #             this_dir, this_filename = os.path.split(__file__)  # Get path of data.pkl
-#             controller_data_path = os.path.join(this_dir, 'controller_data.pickle')
+#             controller_params_path = os.path.join(this_dir, 'controller_params.pickle')
 #
-#         controller_data = pickle_import(controller_data_path)
+#         controller_params = pickle_import(controller_params_path)
 #
-#         self.A = controller_data['A']
-#         self.B = controller_data['B']
-#         self.C = controller_data['C']
-#         self.K = controller_data['K']
-#         self.L = controller_data['L']
+#         self.A = controller_params['A']
+#         self.B = controller_params['B']
+#         self.C = controller_params['C']
+#         self.K = controller_params['K']
+#         self.L = controller_params['L']
 #
 #         self.AL = self.A - np.dot(self.L[:, None], self.C[None, :])
 #
 #         # Form optimization problem
-#         controller_data_path = os.path.join(this_dir, 'controller_design_data.pickle')
-#         controller_design_data = pickle_import(controller_data_path)
+#         controller_params_path = os.path.join(this_dir, 'controller_design_data.pickle')
+#         controller_design_data = pickle_import(controller_params_path)
 #
 #         A4, B4, Q4, R4 = [controller_design_data[key] for key in ['A', 'B', 'Q', 'R']]
 #         QN4 = 2*Q4
@@ -234,27 +239,27 @@ class LQGController(Controller):
 
 
 class MPCController(Controller):
-    def __init__(self, controller_data_path=None):
+    def __init__(self, controller_params_path=None):
         super().__init__()
         self.error = 0
         self.error_sum = 0
 
-        if controller_data_path is None:
+        if controller_params_path is None:
             this_dir, this_filename = os.path.split(__file__)  # Get path of data.pkl
-            controller_data_path = os.path.join(this_dir, 'controller_data.pickle')
+            controller_params_path = os.path.join(this_dir, 'controller_params.pickle')
 
-        controller_data = pickle_import(controller_data_path)
+        controller_params = pickle_import(controller_params_path)
 
-        self.A = controller_data['A']
-        self.B = controller_data['B']
-        self.C = controller_data['C']
-        self.K = controller_data['K']
-        self.L = controller_data['L']
+        self.A = controller_params['A']
+        self.B = controller_params['B']
+        self.C = controller_params['C']
+        self.K = controller_params['K']
+        self.L = controller_params['L']
 
         self.AL = self.A - np.dot(self.L[:, None], self.C[None, :])
 
-        controller_data_path = os.path.join(this_dir, 'controller_design_data.pickle')
-        controller_design_data = pickle_import(controller_data_path)
+        controller_params_path = os.path.join(this_dir, 'controller_design_data.pickle')
+        controller_design_data = pickle_import(controller_params_path)
 
         A4, B4, Q4, R4 = [controller_design_data[key] for key in ['A', 'B', 'Q', 'R']]
 

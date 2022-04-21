@@ -1,15 +1,9 @@
 """Pickle import/export utilities"""
-# Author: Ben Gravell
-
 import pickle
 import os
 
 
-def create_directory(dirname_out):
-    """Create target directory & all intermediate directories if nonexistent"""
-    if not os.path.exists(dirname_out):
-        os.makedirs(dirname_out)
-        print("Directory '%s' created" % dirname_out)
+from ballbeam.common.path_io import create_directory
 
 
 def pickle_import(filename_in):
@@ -21,6 +15,8 @@ def pickle_import(filename_in):
 
 def pickle_export(dirname_out, filename_out, data):
     create_directory(dirname_out)
-    pickle_on = open(os.path.join(dirname_out, filename_out), "wb")
+    path = os.path.join(dirname_out, filename_out)
+    pickle_on = open(path, "wb")
     pickle.dump(data, pickle_on)
     pickle_on.close()
+    return

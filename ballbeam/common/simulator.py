@@ -1,9 +1,8 @@
 import numpy as np
 import numpy.random as npr
-import numpy.linalg as la
 
 from ballbeam.common.extramath import saturate
-from ballbeam.configuration.configs import constants_config, hardware_config, model_config
+from ballbeam.configurators.configs import constants_config, hardware_config, model_config
 
 
 XMIN, XMAX = -0.115, 0.115  # limits of physical position, in meters

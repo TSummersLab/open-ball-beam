@@ -1,0 +1,29 @@
+READING_OFFSET: !!python/object/apply:numpy.core.multiarray.scalar
+- !!python/object/apply:numpy.dtype
+  args:
+  - f8
+  - false
+  - true
+  state: !!python/tuple
+  - 3
+  - <
+  - null
+  - null
+  - null
+  - -1
+  - -1
+  - 0
+- !!binary |
+  L7rooovOYUA=
+coefficients:
+- -0.01519140418998289
+- 0.11844181461059448
+- 0.08416780098895502
+- -0.29060292108525654
+- 0.5548381407166275
+powers:
+- 5
+- 4
+- 3
+- 2
+- 1
