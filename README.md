@@ -17,16 +17,17 @@ OBB offers a viable alternative
 ## Dependencies
 
 Arduino
-- Servo library https://www.arduino.cc/reference/en/libraries/servo/
-- Polulu VL53L0X library: https://github.com/pololu/vl53l0x-arduino
+- [Arduino IDE](https://www.arduino.cc/en/software)
+- [Servo library](https://www.arduino.cc/reference/en/libraries/servo/)
+- [Polulu VL53L0X library](https://github.com/pololu/vl53l0x-arduino)
 
 Python
-- NumPy
-- SciPy
-- Matplotlib
-- PyQtGraph
-- PySerial
-- Keyboard
+- [NumPy](https://numpy.org/)
+- [SciPy](https://scipy.org/)
+- [Matplotlib](https://matplotlib.org/)
+- [PyQtGraph](https://www.pyqtgraph.org/)
+- [PySerial](https://pythonhosted.org/pyserial/)
+- [Keyboard](https://pypi.org/project/keyboard/)
 - [ruamel.yaml](https://yaml.readthedocs.io/en/latest/)
 
 Install the dependency packages with the following Conda commands
