@@ -1,6 +1,8 @@
-# Open Ball & Beam (OBB)
+![Open Ball & Beam](logo/logo.svg)
 
-*Control science for everyone.*
+# OBB: Open Ball & Beam
+
+*Control science for everyone*
 
 ## Motivation
 Existing educational control systems are often 
