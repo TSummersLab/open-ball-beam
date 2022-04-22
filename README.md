@@ -27,9 +27,11 @@ CAD models for 3D printing are provided in [`cad`](hardware/cad)
 See the [Assembly and Setup Guide](hardware/OBB_Assembly_and_Setup_Guide.pdf) for instructions on how to assemble an OBB unit.
 
 <div align="center">
-<img src="hardware/cad/render_flat.png" alt="logo" width="40%"></img>
+<img src="hardware/cad/render_flat.png" width="30%"></img>
 &nbsp; &nbsp; &nbsp; &nbsp;
-<img src="hardware/cad/render_real.png" alt="logo" width="40%"></img>
+<img src="hardware/cad/render_real.png" width="30%"></img>
+&nbsp; &nbsp; &nbsp; &nbsp;
+<img src="hardware/photo_real.png" width="30%"></img>
 </div>
 
 
