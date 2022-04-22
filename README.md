@@ -81,6 +81,14 @@ It is recommended to use Anaconda or virtualenv to create a separate environment
 
 
 
+## Setup
+
+Determine the COM port that your Arduino is attached to
+- e.g. use Device Manager in Windows
+
+In the `hardware_configurator.py` change the `PORT` to `COM#` as appropriate
+
+
 ## Usage
 
 There are two APIs that offer comparable functionality: Python and Arduino.
