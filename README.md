@@ -1,4 +1,7 @@
-<img src="logo/logo.svg" width="500">
+<div align="center">
+<img src="logo/logo.svg" alt="logo" width="500"></img>
+</div>
+
 
 # OBB: Open Ball & Beam
 
