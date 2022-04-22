@@ -100,7 +100,9 @@ Arduino
 1. Upload `client.ino` to the Arduino.
 
 Host computer 
-- Run `interface.py` to start the interface.
+There are two options:
+- Run `interface.py` to start the interface (without running configurators)
+OR
 - Run `main.py` to run the configurators as well as start the interface.
 
 
