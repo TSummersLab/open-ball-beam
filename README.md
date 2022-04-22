@@ -1,4 +1,4 @@
-![Open Ball & Beam](logo/logo.svg)
+<img src="logo/logo.svg" width="500">
 
 # OBB: Open Ball & Beam
 
