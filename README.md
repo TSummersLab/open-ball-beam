@@ -19,6 +19,13 @@ OBB offers a viable alternative
 
 
 
+## Hardware Construction
+
+See `parts_list.xlsx` for a list of parts to purchase and to kit out a single OBB unit.
+
+See the build guide TODO for instructions on how to assemble an OBB unit.
+
+
 ## Dependencies
 
 ### Arduino
@@ -102,7 +109,7 @@ Host computer
 
 
 
-# Alternative Ball and Beam Systems
+# Alternative Ball & Beam Systems
 
 #### Quanser Ball and Beam
 - Commercial product available from https://www.quanser.com/products/ball-and-beam/
