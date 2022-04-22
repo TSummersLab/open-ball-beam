@@ -97,7 +97,7 @@ Arduino
 In the Python API, the majority of processing occurs on the host computer and the Arduino acts as a simple client, sending raw measurement information and receiving actuator commands. A stable serial connection is required throughout system operation to maintain stability.
 
 Arduino
-1. Upload `interface.ino` to the Arduino.
+1. Upload `client.ino` to the Arduino.
 
 Host computer 
 - Run `interface.py` to start the interface.
