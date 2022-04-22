@@ -3,6 +3,7 @@
 </div>
 
 
+
 # OBB: Open Ball & Beam
 
 *Control science for everyone*
@@ -24,6 +25,12 @@ OBB offers a viable alternative
 See `parts_list.xlsx` for a list of parts to purchase and to kit out a single OBB unit.
 
 See the build guide TODO for instructions on how to assemble an OBB unit.
+
+
+<div align="center">
+<img src="hardware/cad/render_flat.png" alt="logo" width="300"></img>
+<img src="hardware/cad/render_real.png" alt="logo" width="300"></img>
+</div>
 
 
 ## Dependencies
@@ -87,6 +94,9 @@ Determine the COM port that your Arduino is attached to
 - e.g. use Device Manager in Windows
 
 In the `hardware_configurator.py` change the `PORT` to `COM#` as appropriate
+
+Run the `servo_ and sensor calibration Python scripts
+
 
 
 ## Usage
