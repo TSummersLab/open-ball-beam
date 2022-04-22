@@ -77,7 +77,7 @@ def make_sensor_calibration_configurator(constants_configurator, hardware_config
 
     if show_print_arduino:
         # Print for Arduino
-        print_arduino_vector(raw_coefficients, var_name='r2o_coeffs')
+        print_arduino_vector(raw_coefficients, var_name='R2O_COEFFS[]')
 
     if show_plot:
         # Plotting for sanity check
@@ -116,7 +116,7 @@ def make_sensor_calibration_configurator(constants_configurator, hardware_config
         handles, labels = plt.gca().get_legend_handles_labels()
         order = [1, 2, 0]
         plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
-    plt.show()
+        plt.show()
 
     name = 'sensor_calibration'
     data = dict(coefficients=sparse_coefficients, powers=powers, READING_OFFSET=READING_OFFSET)

@@ -14,9 +14,9 @@ def make_interface_configurator():
     controller_type = 'LQG'
     # controller_type = 'MPC'
 
-    # reference_type = 'Constant'
+    reference_type = 'Constant'
     # reference_type = 'SlowSine'
-    reference_type = 'FastSquare'
+    # reference_type = 'FastSquare'
 
     cost_type = 'Default'
 

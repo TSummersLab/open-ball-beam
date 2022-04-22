@@ -55,7 +55,7 @@ def make_design_data():
                    [np.eye(m3)]])
 
     # State & control penalty weights
-    Q4 = np.diag([80.0, 1.0, 20.0, 0.1])  # position, velocity, integral of position, control effort
+    Q4 = np.diag([80.0, 1.0, 200.0, 0.1])  # position, velocity, integral of position, control effort
     R4 = np.diag([4.0])  # control difference
 
     # Process & measurement noise covariances

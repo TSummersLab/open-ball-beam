@@ -74,7 +74,7 @@ def make_servo_calibration_configurator(constants_configurator, hardware_configu
 
     if show_print_arduino:
         # Print for Arduino
-        print_arduino_vector(raw_coefficients, var_name='a2a_coeffs')
+        print_arduino_vector(raw_coefficients, var_name='A2A_COEFFS[]')
 
     if show_plot:
         # Plotting for sanity check
@@ -110,6 +110,7 @@ def make_servo_calibration_configurator(constants_configurator, hardware_configu
         handles, labels = plt.gca().get_legend_handles_labels()
         order = [1, 2, 0]
         plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
+        plt.show()45
 
     name = 'servo_calibration'
     data = dict(coefficients=sparse_coefficients, powers=powers)
