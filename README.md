@@ -20,7 +20,11 @@ OBB offers a viable alternative
 ## Hardware Construction
 See [`parts_list.xlsx`](hardware/parts_list.xlsx) for a list of parts to purchase and to kit out a single OBB unit.
 
-See the build guide TODO for instructions on how to assemble an OBB unit.
+CAD models for 3D printing are provided in [`cad`](hardware/cad)
+- [STEP files](hardware/cad/step) (portable format), suitable for 3D printing
+- [PTC Creo files](hardware/cad/creo) (native format), suitable for viewing and redesign in PTC Creo
+
+See the [Assembly and Setup Guide](hardware/OBB_Assembly_and_Setup_Guide.pdf) for instructions on how to assemble an OBB unit.
 
 <div align="center">
 <img src="hardware/cad/render_flat.png" alt="logo" width="40%"></img>
@@ -139,7 +143,8 @@ Alternatively, run [`main.py`](ballbeam/main.py) to run the configurators as wel
 
 ## BOBShield
 Recently BOBShield was proposed
-https://ieeexplore.ieee.org/abstract/document/9454013
+- https://ieeexplore.ieee.org/abstract/document/9454013
+- https://github.com/gergelytakacs/AutomationShield/wiki/BoBShield
 
 Similarities between BOBShield and OBB:
 - Arduino-based
