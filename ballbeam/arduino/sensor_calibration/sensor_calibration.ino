@@ -10,11 +10,9 @@ const unsigned long BAUD_RATE = 115200;
 const byte INT_SIZE = sizeof(int);
 
 const int SERVO_CMD_REST = 1400;  // in microseconds  // make the ball roll down to the end near sensor in the rest state
-
 const int DT = 20;               // in milliseconds
 
-const int dists[] = {14, 30, 40, 50, 60, 70, 80, 90, 100, 105, 110, 120, 130, 140, 150, 160, 170, 196};
-//const int dists[] = {105};
+const int dists[] = {14, 30, 40, 50, 60, 70, 80, 90, 100, 105, 110, 120, 130, 140, 150, 160, 170, 196};  // Note the endpoints and the midpoint are included
 const int num_dists = sizeof(dists) / sizeof(int);
 
 unsigned long now = millis();
