@@ -58,7 +58,7 @@ Install the dependency packages with the following Conda commands
 ### Arduino
 
 A baud rate of 115200 is used throughout the project.
-- When using `Tools -> Serial Monitor` make sure to use 115200 baud rate.
+- When using `Tools` -> `Serial Monitor` or `Serial Plotter` make sure to use 115200 baud rate.
 
 
 ### Python
@@ -68,6 +68,35 @@ It is recommended to use Anaconda or virtualenv to create a separate environment
 2. Open a terminal / command prompt / Anaconda Prompt
 3. Navigate to the root level directory of this package
 4. Run the command `pip install .`
+
+
+
+## Usage
+
+There are two APIs that offer comparable functionality: Python and Arduino.
+
+### Arduino API
+In the Arduino API, all processing (e.g. control and state estimation) occurs locally on the Arduino board. No serial connection to a host computer is strictly required during system operation; a serial connection is required only for uploading programs and for monitoring system operation through the Serial Monitor and Serial Plotter.
+
+Arduino
+1. Upload `interface.ino` to the Arduino.
+2. Start the `Tools` -> `Serial Plotter` to monitor the various signals in the system.
+
+
+### Python API
+In the Python API, the majority of processing occurs on the host computer and the Arduino acts as a simple client, sending raw measurement information and receiving actuator commands. A stable serial connection is required throughout system operation to maintain stability.
+
+Arduino
+1. Upload `interface.ino` to the Arduino.
+
+Host computer 
+- Run `interface.py` to start the interface.
+- Run `main.py` to run the configurators as well as start the interface.
+
+
+
+
+
 
 
 # Alternative Ball and Beam Systems
@@ -106,7 +135,7 @@ Drawbacks of BOBShield under OBB:
 - Servo is driven by Arduino power rather than an external power source
   - BOBShield can get away with this because they use a micro servo, but not ideal for reliable power delivery
 - Ball is captured inside a transparent tube
-  - Leads to weird friction behavior (harder to control)
+  - Can lead to unusual friction behavior (harder to control)
   - ToF sensor not able to function properly due to occlusions (harder to sense)
-- There is no IMU sensor
+- No IMU sensor
   - Cannot automatically calibrate servo angle against Earth's gravity
