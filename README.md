@@ -28,8 +28,9 @@ See the build guide TODO for instructions on how to assemble an OBB unit.
 
 
 <div align="center">
-<img src="hardware/cad/render_flat.png" alt="logo" width="300"></img>
-<img src="hardware/cad/render_real.png" alt="logo" width="300"></img>
+<img src="hardware/cad/render_flat.png" alt="logo" width="40%"></img>
+&nbsp; &nbsp; &nbsp; &nbsp;
+<img src="hardware/cad/render_real.png" alt="logo" width="40%"></img>
 </div>
 
 
