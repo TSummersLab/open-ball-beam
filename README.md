@@ -5,18 +5,15 @@
 
 # OBB: Open Ball & Beam
 
-[**Quickstart**](#quickstart-colab-in-the-cloud)
-| [**Hardware**](#hardware)
+[**Hardware**](#hardware)
 | [**Software**](#software)
-| [**Neural net libraries**](#neural-network-libraries)
-| [**Reference docs**](https://jax.readthedocs.io/en/latest/)
 
 
 ## What is OBB?
 
 OBB is *control science for everyone*.
-1. Open-source hardware and software.
-2. A low-cost platform for research, teaching, and self-guided instruction in data-driven control.
+1. A low-cost, open-source hardware and software platform.
+2. For research, teaching, and self-guided instruction in data-driven control.
 3. An open-loop neutrally stable dynamical system that is nontrivial to control.
 
 
@@ -25,11 +22,16 @@ OBB is *control science for everyone*.
 Existing educational control systems are often 
 1. Prohibitively expensive (cost thousands of USD)
 2. Use proprietary hardware and software
-   - Development knowledge is not transferrable to other systems
+   - Development knowledge is not transferrable to other systems.
 
 OBB offers a viable alternative 
-1. OBB is cheap enough for most individuals and labs
-2. OBB uses open-source and widely available hardware and software
+1. OBB is cheap enough for most individuals and labs.
+2. OBB uses open-source and widely available hardware and software.
+
+OBB encourages users to get their hands dirty!
+1. Redesign custom 3D parts
+2. Create new & improved controllers
+
 
 
 # Hardware 
@@ -38,7 +40,7 @@ OBB offers a viable alternative
 See [`parts_list.xlsx`](hardware/parts_list.xlsx) for a list of parts to purchase and to kit out a single OBB unit.
 
 ## CAD models
-CAD models for 3D printing are provided in [`cad`](hardware/cad)
+CAD models for 3D printing are provided in the [`cad`](hardware/cad) directory.
 - [STEP files](hardware/cad/step) (portable format), suitable for 3D printing.
 - [PTC Creo files](hardware/cad/creo) (native format), suitable for viewing and redesign in PTC Creo.
 
@@ -60,7 +62,7 @@ See the [Assembly and Setup Guide](hardware/OBB_Assembly_and_Setup_Guide.pdf) fo
 OBB was developed and tested on 64-bit Windows 10 using Anaconda environments, but likely will work on other platforms as well e.g. Linux.
 
 ## Features
-OBB ships with the following software features
+OBB ships with the following software features.
 
 ### Control schemes
 - Proportional-integral-derivative (PID)
@@ -134,8 +136,8 @@ Install the dependency packages with the following Conda commands
 ### General setup
 
 1. Baud rate
-  - A baud rate of 115200 is used throughout the project.
-  - When using `Tools` -> `Serial Monitor` or `Serial Plotter` make sure to use 115200 baud rate.
+    - A baud rate of 115200 is used throughout the project.
+    - When using `Tools` -> `Serial Monitor` or `Serial Plotter` make sure to use 115200 baud rate.
 
 2. COM port
     - Determine the COM port that your Arduino is attached to
