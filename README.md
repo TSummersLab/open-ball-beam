@@ -2,10 +2,25 @@
 <img src="logo/logo.svg" alt="logo" width="500"></img>
 </div>
 
+
 # OBB: Open Ball & Beam
 
-## Why OBB?
+[**Quickstart**](#quickstart-colab-in-the-cloud)
+| [**Hardware**](#hardware)
+| [**Software**](#software)
+| [**Neural net libraries**](#neural-network-libraries)
+| [**Reference docs**](https://jax.readthedocs.io/en/latest/)
+
+
+## What is OBB?
+
 OBB is *control science for everyone*.
+1. Open-source hardware and software.
+2. A low-cost platform for research, teaching, and self-guided instruction in data-driven control.
+3. An open-loop neutrally stable dynamical system that is nontrivial to control.
+
+
+## Why OBB?
 
 Existing educational control systems are often 
 1. Prohibitively expensive (cost thousands of USD)
@@ -17,13 +32,17 @@ OBB offers a viable alternative
 2. OBB uses open-source and widely available hardware and software
 
 
-## Hardware Construction
+# Hardware 
+
+## Parts list
 See [`parts_list.xlsx`](hardware/parts_list.xlsx) for a list of parts to purchase and to kit out a single OBB unit.
 
+## CAD models
 CAD models for 3D printing are provided in [`cad`](hardware/cad)
-- [STEP files](hardware/cad/step) (portable format), suitable for 3D printing
-- [PTC Creo files](hardware/cad/creo) (native format), suitable for viewing and redesign in PTC Creo
+- [STEP files](hardware/cad/step) (portable format), suitable for 3D printing.
+- [PTC Creo files](hardware/cad/creo) (native format), suitable for viewing and redesign in PTC Creo.
 
+## Assembly and setup
 See the [Assembly and Setup Guide](hardware/OBB_Assembly_and_Setup_Guide.pdf) for instructions on how to assemble an OBB unit.
 
 <div align="center">
@@ -35,9 +54,34 @@ See the [Assembly and Setup Guide](hardware/OBB_Assembly_and_Setup_Guide.pdf) fo
 </div>
 
 
-## Dependencies
+# Software
+
+## Development info
+OBB was developed and tested on 64-bit Windows 10 using Anaconda environments, but likely will work on other platforms as well e.g. Linux.
+
+## Features
+OBB ships with the following software features
+
+### Control schemes
+- Proportional-integral-derivative (PID)
+- Linear quadratic regulator (LQR) with integral control
+- Model predictive control (MPC) with integral control
+- Anti-windup for integral control
+
+### Observation processing schemes
+- Exponential smoothing
+- Linear quadratic state estimation (Kalman filter)
+
+### Convenience features
+- Ball removal detection
+
+
+## Setup
 
 ### Arduino
+
+#### Dependencies
+
 - [Arduino IDE](https://www.arduino.cc/en/software)
 - [Servo library](https://www.arduino.cc/reference/en/libraries/servo/)
 - [Polulu VL53L0X library](https://github.com/pololu/vl53l0x-arduino)
@@ -56,7 +100,17 @@ See the [Assembly and Setup Guide](hardware/OBB_Assembly_and_Setup_Guide.pdf) fo
     - [BasicLinearAlgebra](https://www.arduino.cc/reference/en/libraries/basiclinearalgebra/)
         - Search for `BasicLinearAlgebra`
 
+
 ### Python
+
+It is recommended to use [Anaconda](https://www.anaconda.com/) or [virtualenv](https://docs.python.org/3/library/venv.html) to create a separate environment to install OBB and its dependencies.
+
+1. Open a terminal / command prompt / Anaconda Prompt.
+2. Create a new environment.
+3. Activate the desired environment.
+
+
+#### Dependencies
 - [NumPy](https://numpy.org/)
 - [SciPy](https://scipy.org/)
 - [Matplotlib](https://matplotlib.org/)
@@ -71,35 +125,32 @@ Install the dependency packages with the following Conda commands
 - `conda install -c conda-forge pyqtgraph osqp`
 
 
-## Installation
+### OBB Installation
 
-### Arduino
-
-A baud rate of 115200 is used throughout the project.
-- When using `Tools` -> `Serial Monitor` or `Serial Plotter` make sure to use 115200 baud rate.
-
-### Python
-It is recommended to use Anaconda or virtualenv to create a separate environment to install in.
-
-1. Activate the desired environment
-2. Open a terminal / command prompt / Anaconda Prompt
-3. Navigate to the root level directory of this package
-4. Run the command `pip install .`
+1. Navigate to the root level directory of this package.
+2. Run the command `pip install .`
 
 
-## Setup
-1. COM port
+### General setup
+
+1. Baud rate
+  - A baud rate of 115200 is used throughout the project.
+  - When using `Tools` -> `Serial Monitor` or `Serial Plotter` make sure to use 115200 baud rate.
+
+2. COM port
     - Determine the COM port that your Arduino is attached to
         - e.g. use Device Manager in Windows
     - In [`hardware_configurator.py`](ballbeam/configurators/hardware_configurator.py) change `PORT` to `COM#` as appropriate.
-2. Servo and sensor calibration coefficients
+
+3. Servo and sensor calibration coefficients
     - Run [`servo_calibrator.py`](ballbeam/calibrators/servo_calibrator.py) and [`sensor_calibrator.py`](ballbeam/calibrators/sensor_calibrator.py)
     - Copy the printed coefficients into [`constants.cpp`](ballbeam/arduino/interface/src/constants.cpp)
 
 
-## Usage
-
-There are two APIs that offer comparable functionality: Python and Arduino.
+## APIs
+There are two APIs that offer comparable functionality:
+1. [**Arduino API**](#arduino-api)
+2. [**Python API**](#python-api)
 
 ### Arduino API
 In the Arduino API, all processing (e.g. control and state estimation) occurs locally on the Arduino board. No serial connection to a host computer is strictly required during system operation; a serial connection is required only for uploading programs and for monitoring system operation through the Serial Monitor and Serial Plotter.
@@ -108,8 +159,8 @@ The benefit of the Arduino API is that no host computer is required to run the s
 In this configuration, only power to the Arduino (e.g. over the USB cable) is necessary, so the system is more portable and be run from any location with power outlets.
 MPC control is currently not available in the Arduino API.
 
-
-#### Arduino
+#### Usage
+##### Arduino
 1. Upload [`interface.ino`](ballbeam/arduino/interface/interface.ino) to the Arduino.
 2. Start the `Tools` -> `Serial Plotter` to monitor the various signals in the system.
 
@@ -118,24 +169,24 @@ MPC control is currently not available in the Arduino API.
 In the Python API, the majority of processing occurs on the host computer and the Arduino acts as a simple client, sending raw measurement information and receiving actuator commands. A stable serial connection is required throughout system operation to maintain stability.
 
 The benefit of the Python API is that the full computing power of the host computer can be used to control the system.
-In particular, the more computationally intensive Model Predictive Control (MPC) strategy can be used.
+In particular, the more computationally intensive MPC strategy can be used.
 
-
-#### Arduino
+#### Usage
+##### Arduino
 1. Upload [`client.ino`](ballbeam/arduino/interface/client.ino) to the Arduino.
 
-#### Host computer 
-
-1. Adjust all the configurable parameters in the [`*\_configurator.py`](ballbeam/configurators) files as needed
-     - Set the `system_type` variable to `'Simulator'` in [`interface_configurator.py`](ballbeam/configurators/interface_configurator.py) first to ensure proper functioning in the simulator before attempting to run on the physical hardware
-3. Run [`configurators.py`](ballbeam/configurators/configurators.py) to run all configurators
-4. Run [`interface.py`](ballbeam/common/interface.py) to start the interface (without running configurators)
+##### Host computer
+1. Adjust all the configurable parameters in the [`*_configurator.py`](ballbeam/configurators) files as needed.
+     - Set the `system_type` variable to `'Simulator'` in [`interface_configurator.py`](ballbeam/configurators/interface_configurator.py) first to ensure proper functioning in the simulator before attempting to run on the physical hardware.
+3. Run [`configurators.py`](ballbeam/configurators/configurators.py) to run all configurators.
+4. Run [`interface.py`](ballbeam/common/interface.py) to start the interface (without running configurators).
 
 Alternatively, run [`main.py`](ballbeam/main.py) to run the configurators as well as start the interface.
 
 
 
-# Alternative Ball & Beam Systems
+
+# Alternative Ball & Beam systems
 
 ## Quanser Ball and Beam
 - Commercial product available from https://www.quanser.com/products/ball-and-beam/
