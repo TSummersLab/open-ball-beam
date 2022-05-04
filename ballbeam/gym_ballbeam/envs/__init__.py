@@ -1,2 +1,0 @@
-"""LQR Gym Enviornment."""
-
