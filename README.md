@@ -7,6 +7,7 @@
 
 [**Hardware**](#hardware)
 | [**Software**](#software)
+| [**Mathematics**](#mathematics)
 | [**Contributors**](#contributors)
 
 
@@ -17,7 +18,7 @@ OBB is *control science for everyone*.
 3. An open-loop neutrally stable dynamical system that is nontrivial to control.
 
 ## Why OBB?
-[Existing educational control systems](alternatives.md) are often 
+[Existing educational control systems](docs/ALTERNATIVES.md) are often 
 1. Prohibitively expensive (cost thousands of USD)
 2. Use proprietary hardware and software
    - Development knowledge is not transferrable to other systems.
@@ -42,7 +43,7 @@ CAD models for 3D printing are provided in the [`cad`](hardware/cad) directory.
 - [PTC Creo files](hardware/cad/creo) (native format), suitable for viewing and redesign in PTC Creo.
 
 ## Assembly and setup
-See the [Assembly and Setup Guide](hardware/OBB_Assembly_and_Setup_Guide.pdf) for instructions on how to assemble an OBB unit.
+See the [Assembly and Setup Guide](docs/OBB_Assembly_and_Setup_Guide/OBB_Assembly_and_Setup_Guide.pdf) for instructions on how to assemble an OBB unit.
 
 <div align="center">
 <img src="hardware/cad/render_flat.png" width="30%"></img>
@@ -181,6 +182,11 @@ In particular, the more computationally intensive MPC strategy can be used.
 4. Run [`interface.py`](ballbeam/common/interface.py) to start the interface (without running configurators).
 
 Alternatively, run [`main.py`](ballbeam/main.py) to run the configurators as well as start the interface.
+
+
+## Mathematics
+An technical write-up describing the [mathematics](docs/OBB_Mathematics/OBB_Mathematics.pdf) behind the software is available.
+Note that this document is still in development.
 
 
 # Contributors
