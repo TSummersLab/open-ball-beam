@@ -39,3 +39,9 @@ Drawbacks of BOBShield under OBB:
   - ToF sensor not able to function properly due to occlusions (harder to sense).
 - No IMU sensor.
   - Cannot automatically calibrate servo angle against Earth's gravity.
+
+## PyMoskito
+https://pymoskito.readthedocs.io/
+- Purely a software package.
+- Has a Ball & Beam model https://pymoskito.readthedocs.io/en/stable/examples/ballbeam.html
+- Also has several other dynamical systems.
