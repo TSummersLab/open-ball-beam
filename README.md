@@ -30,6 +30,7 @@ OBB offers a viable alternative
 OBB encourages users to get their hands dirty!
 1. Redesign custom 3D parts
 2. Create new & improved controllers
+3. Try out reinforcement learning algorithms
 
 
 # Hardware 
@@ -75,6 +76,14 @@ OBB ships with the following software features.
 
 ### Convenience features
 - Ball removal detection
+
+### OpenAI Gym environments
+OBB ships with environments compatible with [OpenAI Gym](https://gym.openai.com/) (requires Gym installation)
+- Continuous action-space environment `BallBeamContinuousEnv`
+- Discrete action-space environment `BallBeamDiscreteEnv`
+- Option to use simulator (with fast visualizer) or the actual physical hardware
+
+Try out reinforcement learning algorithms e.g. those from [OpenAI Spinning Up](https://spinningup.openai.com/en/latest/) in simulation or on a real-world physical system!
 
 
 ## Setup
