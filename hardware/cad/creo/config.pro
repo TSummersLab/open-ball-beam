@@ -1,0 +1,5 @@
+﻿orientation isometric
+shade_quality 6
+skip_small_surfaces no
+edge_display_quality very_high
+enable_fsaa off
