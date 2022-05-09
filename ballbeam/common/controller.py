@@ -158,7 +158,7 @@ class MPCController(Controller):
     def __init__(self, controller_params_path=None):
         super().__init__()
 
-        import emosqp  # Must match the python_ext_name='emosqp' from prob.codegen() in mpc/design.py
+        from ballbeam.common import emosqp  # Must match the python_ext_name='emosqp' from prob.codegen() in configurators/controller/mpc/design.py
         self.solver = emosqp
 
         if controller_params_path is None:

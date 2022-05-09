@@ -8,15 +8,18 @@ from ballbeam.common.utility import Dict2Obj
 
 this_dir, this_filename = os.path.split(__file__)  # Get path of this file
 
+configuration_dir_name = 'configuration'
+configuration_dir = os.path.join('..', configuration_dir_name)
+
 
 def make_config_obj(filename):
-    return Dict2Obj(yaml_import(os.path.join(this_dir, filename)))
+    return Dict2Obj(yaml_import(os.path.join(this_dir, configuration_dir, filename)))
 
 
-constants_config = make_config_obj('../configuration/constants_config.yaml')
-model_config = make_config_obj('../configuration/model_config.yaml')
-hardware_config = make_config_obj('../configuration/hardware_config.yaml')
-interface_config = make_config_obj('../configuration/interface_config.yaml')
-plot_config = make_config_obj('../configuration/plot_config.yaml')
-servo_calibration_config = make_config_obj('../configuration/servo_calibration_config.yaml')
-sensor_calibration_config = make_config_obj('../configuration/sensor_calibration_config.yaml')
+constants_config = make_config_obj('constants_config.yaml')
+model_config = make_config_obj('model_config.yaml')
+hardware_config = make_config_obj('hardware_config.yaml')
+interface_config = make_config_obj('interface_config.yaml')
+plot_config = make_config_obj('plot_config.yaml')
+servo_calibration_config = make_config_obj('servo_calibration_config.yaml')
+sensor_calibration_config = make_config_obj('sensor_calibration_config.yaml')

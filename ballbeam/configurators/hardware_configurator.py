@@ -44,7 +44,7 @@ def make_hardware_configurator():
     BEAM_ANGLE_SCALE = 10.0
 
     beam_data = dict(ANGLE=dict(MIN=BEAM_ANGLE_MIN,
-                                     MAX=BEAM_ANGLE_MAX),
+                                MAX=BEAM_ANGLE_MAX),
                      ANGLE_SCALE=BEAM_ANGLE_SCALE)
 
     # Sensor configuration

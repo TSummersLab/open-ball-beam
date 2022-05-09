@@ -40,7 +40,7 @@ def step(f, x, u, w, dt=None, method='rk4'):
 
 
 class Simulator:
-    def __init__(self, x0=None, servo_assumption='instant'):
+    def __init__(self, x0=None, servo_assumption='instant', process_noise_scale=1.0, sensor_noise_scale=1.0):
         # Configuration
         self.config = model_config
 
@@ -55,6 +55,9 @@ class Simulator:
             raise ValueError
 
         self.V = np.diag([1e-6])  # sensor noise covariance
+
+        self.W *= process_noise_scale
+        self.V *= sensor_noise_scale
 
         self.m, self.p = 1, 1
 
