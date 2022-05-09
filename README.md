@@ -41,6 +41,7 @@ See [`parts_list.xlsx`](hardware/parts_list.xlsx) for a list of parts to purchas
 CAD models for 3D printing are provided in the [`cad`](hardware/cad) directory.
 - [STEP files](hardware/cad/step) (portable format), suitable for 3D printing.
 - [PTC Creo files](hardware/cad/creo) (native format), suitable for viewing and redesign in PTC Creo.
+    - The full assembly [`ballbeam.asm`](hardware/cad/creo/ballbeam.asm) may be opened in Creo. Working kinematic joints are provided so the movement can be interacted with via dragging.
 
 ## Assembly and setup
 See the [Assembly and Setup Guide](docs/OBB_Assembly_and_Setup_Guide/OBB_Assembly_and_Setup_Guide.pdf) for instructions on how to assemble an OBB unit.
