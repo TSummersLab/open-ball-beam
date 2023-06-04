@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 import PyQt5
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import keyboard
 
 from ballbeam.common.controller import Controller, SineController, PIDController, LQGController, MPCController
@@ -290,7 +290,8 @@ if __name__ == '__main__':
         timer.start(0)
 
         if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-            QtGui.QApplication.instance().exec_()
+            app = QtWidgets.QApplication(sys.argv)
+            app.instance().exec_()
 
         system.shutdown()
 

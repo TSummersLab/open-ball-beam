@@ -2,18 +2,13 @@
 # which can be accessed across various Python scripts
 import os
 
+from ballbeam.static import CONFIGURATION_PATH
 from ballbeam.common.yaml_io import yaml_import
 from ballbeam.common.utility import Dict2Obj
 
 
-this_dir, this_filename = os.path.split(__file__)  # Get path of this file
-
-configuration_dir_name = 'configuration'
-configuration_dir = os.path.join('..', configuration_dir_name)
-
-
 def make_config_obj(filename):
-    return Dict2Obj(yaml_import(os.path.join(this_dir, configuration_dir, filename)))
+    return Dict2Obj(yaml_import(CONFIGURATION_PATH.joinpath(filename)))
 
 
 constants_config = make_config_obj('constants_config.yaml')

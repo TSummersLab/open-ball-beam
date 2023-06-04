@@ -3,7 +3,9 @@ from pathlib import Path
 
 import ballbeam
 
-BALLBEAM_PATH = Path(ballbeam.__file__).parent
+# REPLACE THIS WITH THE PATH TO YOUR BALLBEAM REPO
+BALLBEAM_PATH = Path("C:/Users/bjgra/GitHub/open-ball-beam/ballbeam")
+
 COMMON_PATH = BALLBEAM_PATH.joinpath('common')
 
 CONFIGURATORS_PATH = BALLBEAM_PATH.joinpath('configurators')
