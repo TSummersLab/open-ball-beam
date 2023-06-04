@@ -9,10 +9,10 @@ extern const long TIMEOUT_COUNT = 5;  // number of consecutive timesteps that th
 extern const float OBS_BACKSTOP = 0.090;  // in meters, ensure there is sufficient buffer to prevent spurious resets
 
 
-//extern const float SETPOINT1 = 0.0;  // in meters
-//extern const float SETPOINT2 = 0.0;  // in meters
-extern const float SETPOINT1 = -0.050;  // in meters
-extern const float SETPOINT2 = 0.050;  // in meters
+extern const float SETPOINT1 = 0.0;  // in meters
+extern const float SETPOINT2 = 0.0;  // in meters
+// extern const float SETPOINT1 = -0.050;  // in meters
+// extern const float SETPOINT2 = 0.050;  // in meters
 extern const long SETPOINT_WAIT_TIME = 10000;  // in milliseconds
 
 extern const int SERVO_CMD_MID = 1500;  // in microseconds
