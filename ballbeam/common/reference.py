@@ -6,17 +6,17 @@ from ballbeam.configurators.configs import CONFIG
 class Reference:
     """Base class for reference trajectory generators."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def setpoint(self, t):
+    def setpoint(self, t) -> float:
         return 0.0
 
 
 class ConstantReference(Reference):
     """A reference at a constant value."""
 
-    def __init__(self, center=0.0):
+    def __init__(self, center=0.0) -> None:
         super().__init__()
         self.center = center  # in meters
 
@@ -27,7 +27,7 @@ class ConstantReference(Reference):
 class PeriodicReference(ConstantReference):
     """A reference that changes periodically with a given waveform."""
 
-    def __init__(self, amplitude=0.050, frequency=0.1, waveform="sine"):
+    def __init__(self, amplitude=0.050, frequency=0.1, waveform="sine") -> None:
         super().__init__()
         self.amplitude = amplitude  # in meters
         self.frequency = frequency  # in Hz
@@ -39,9 +39,7 @@ class PeriodicReference(ConstantReference):
         if self.waveform == "sine":
             deviation = np.sin(phase_rad)
         elif self.waveform == "rounded_square":
-            sharpness = (
-                3  # bigger = closer to a square wave, smaller = closer to a sine wave
-            )
+            sharpness = 3  # bigger = closer to a square wave, smaller = closer to a sine wave
             deviation = np.tanh(sharpness * np.sin(phase_rad))
         elif self.waveform == "square":
             deviation = np.sign(float(phase % 2 > 1) - 0.5)

@@ -1,28 +1,26 @@
 import math
+
 import gym
-from gym import spaces, logger
-from gym.utils import seeding
 import numpy as np
+from gym import logger, spaces
+from gym.utils import seeding
 
 from ballbeam.common.colors import Monokai
-from ballbeam.common.reference import ConstantReference
 from ballbeam.common.cost import Cost
-from ballbeam.common.simulator import Simulator, XMIN, XMAX, YMIN, YMAX
 from ballbeam.common.hardware import Hardware
+from ballbeam.common.reference import ConstantReference
+from ballbeam.common.simulator import XMAX, XMIN, YMAX, YMIN, Simulator
 from ballbeam.configurators.configs import CONFIG
 
 
 class BallBeamEnv(gym.Env):
-    metadata = {
-        'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second': 50
-    }
+    metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
 
-    def __init__(self, max_episode_length=200, hardware=False, seed=None):
+    def __init__(self, max_episode_length=200, hardware=False, seed=None) -> None:
         self.seed(seed)
         self.viewer = None
-        self.umin = CONFIG.hardware.BEAM.ANGLE.MIN*CONFIG.constants.DEG2RAD
-        self.umax = CONFIG.hardware.BEAM.ANGLE.MAX*CONFIG.constants.DEG2RAD
+        self.umin = CONFIG.hardware.BEAM.ANGLE.MIN * CONFIG.constants.DEG2RAD
+        self.umax = CONFIG.hardware.BEAM.ANGLE.MAX * CONFIG.constants.DEG2RAD
         self.action_space = None
         # VMAX = (YMAX-YMIN)/CONFIG.hardware.COMM.DT
         # VMIN = -VMAX
@@ -44,7 +42,7 @@ class BallBeamEnv(gym.Env):
         np.random.seed(seed)
         return [seed]
 
-    def action2theta(self, action):
+    def action2theta(self, action) -> None:
         raise NotImplementedError
 
     def step(self, action):
@@ -72,13 +70,13 @@ class BallBeamEnv(gym.Env):
 
         # Get the current cost of the observation and theta
         cost_dict = self.cost.take(self.observation, theta)
-        reward = -cost_dict['c']
+        reward = -cost_dict["c"]
 
         # Evolve the system forward by one step
         self.system.process(theta)
 
         # done = bool(not XMIN+0.010 < self.observation < XMAX-0.010)  # use 0.99 fudge factor so simulator doesnt have to be altered
-        done = bool(self.t+1 >= self.max_episode_length)
+        done = bool(self.t + 1 >= self.max_episode_length)
         # done = False  # never terminate early
 
         # Increment the time index
@@ -95,7 +93,7 @@ class BallBeamEnv(gym.Env):
                     "You are calling 'step()' even though this "
                     "environment has already returned done = True. You "
                     "should always call 'reset()' once you receive 'done = "
-                    "True' -- any further steps are undefined behavior."
+                    "True' -- any further steps are undefined behavior.",
                 )
             self.steps_beyond_done += 1
             reward = 0.0
@@ -108,7 +106,7 @@ class BallBeamEnv(gym.Env):
         if pos0 is None:
             # pos0 = self.np_random.uniform(XMIN+0.020, XMAX-0.020)
             # pos0 = self.np_random.choice([XMIN+0.020, XMIN+0.040, XMAX-0.040, XMAX-0.020])
-            pos0 = XMIN+0.020
+            pos0 = XMIN + 0.020
         self.system.reset(np.array([pos0, 0.0]))
         self.theta = 0.0
         self.t = 0
@@ -118,14 +116,14 @@ class BallBeamEnv(gym.Env):
         self.steps_beyond_done = None
         return self.observation
 
-    def render(self, mode='human'):
+    def render(self, mode="human"):
         screen_width = 600
         screen_height = 200
 
-        world_width = (XMAX-XMIN) * 1.25
-        scale = screen_width/world_width
-        axlex, axley = 0.9*screen_width, 0.3*screen_height
-        beamlength = scale * (XMAX-XMIN)
+        world_width = (XMAX - XMIN) * 1.25
+        scale = screen_width / world_width
+        axlex, axley = 0.9 * screen_width, 0.3 * screen_height
+        beamlength = scale * (XMAX - XMIN)
         beamthick = 20
         ballrad = 40
         tgtballrad = 44
@@ -133,10 +131,11 @@ class BallBeamEnv(gym.Env):
 
         if self.viewer is None:
             from gym.envs.classic_control import rendering
+
             self.viewer = rendering.Viewer(screen_width, screen_height)
 
             # Background
-            color = tuple(val/255 for val in Monokai.k)
+            color = tuple(val / 255 for val in Monokai.k)
             l, r, t, b = 0, screen_width, screen_height, 0
             bkgd = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
             bkgd.set_color(*color)
@@ -146,9 +145,9 @@ class BallBeamEnv(gym.Env):
             self.axletrans.set_translation(axlex, axley)
 
             # Add the beam
-            l, r, t, b = -beamlength/2, beamlength/2, beamthick/2, -beamthick/2
+            l, r, t, b = -beamlength / 2, beamlength / 2, beamthick / 2, -beamthick / 2
             self.beam = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
-            color = tuple(val/255 for val in Monokai.b)
+            color = tuple(val / 255 for val in Monokai.b)
             self.beam.set_color(*color)
             self.beamtrans = rendering.Transform()
             self.beam.add_attr(self.beamtrans)
@@ -158,7 +157,7 @@ class BallBeamEnv(gym.Env):
             # Add the axle
             self.axle = rendering.make_circle(radius=axlerad)
             self.axle.add_attr(self.axletrans)
-            color = tuple(val/255 for val in Monokai.s)
+            color = tuple(val / 255 for val in Monokai.s)
             self.axle.set_color(*color)
             self.viewer.add_geom(self.axle)
 
@@ -168,7 +167,7 @@ class BallBeamEnv(gym.Env):
             self.tgtballtrans = rendering.Transform()
             self.tgtball.add_attr(self.tgtballtrans)
             self.tgtball.add_attr(self.axletrans)
-            color = tuple(val/255 for val in Monokai.y)
+            color = tuple(val / 255 for val in Monokai.y)
             self.tgtball.set_color(*color)
             self.viewer.add_geom(self.tgtball)
 
@@ -177,7 +176,7 @@ class BallBeamEnv(gym.Env):
             self.balltrans = rendering.Transform()
             self.ball.add_attr(self.balltrans)
             self.ball.add_attr(self.axletrans)
-            color = tuple(val/255 for val in Monokai.w)
+            color = tuple(val / 255 for val in Monokai.w)
             self.ball.set_color(*color)
             self.viewer.add_geom(self.ball)
 
@@ -186,26 +185,26 @@ class BallBeamEnv(gym.Env):
 
         # Dynamic updates
         x = self.observation + self.setpoint
-        beamx = -math.cos(self.theta)*0.5*beamlength
-        beamy = -math.sin(self.theta)*0.5*beamlength
+        beamx = -math.cos(self.theta) * 0.5 * beamlength
+        beamy = -math.sin(self.theta) * 0.5 * beamlength
 
-        ballx = -math.cos(self.theta)*((XMAX-XMIN)-(x-XMIN))*scale
-        bally = -math.sin(self.theta)*((XMAX-XMIN)-(x-XMIN))*scale + beamthick/2.0 + ballrad
+        ballx = -math.cos(self.theta) * ((XMAX - XMIN) - (x - XMIN)) * scale
+        bally = -math.sin(self.theta) * ((XMAX - XMIN) - (x - XMIN)) * scale + beamthick / 2.0 + ballrad
 
         self.balltrans.set_translation(ballx, bally)
         self.beamtrans.set_rotation(self.theta)
         self.beamtrans.set_translation(beamx, beamy)
 
         x_tgt = self.setpoint
-        tgtx = -math.cos(self.theta)*((XMAX-XMIN)-(x_tgt-XMIN))*scale
-        tgty = -math.sin(self.theta)*((XMAX-XMIN)-(x_tgt-XMIN))*scale + beamthick/2.0 + ballrad
+        tgtx = -math.cos(self.theta) * ((XMAX - XMIN) - (x_tgt - XMIN)) * scale
+        tgty = -math.sin(self.theta) * ((XMAX - XMIN) - (x_tgt - XMIN)) * scale + beamthick / 2.0 + ballrad
         self.tgtballtrans.set_translation(tgtx, tgty)
 
-        return_rgb_array = mode == 'rgb_array'
+        return_rgb_array = mode == "rgb_array"
 
         return self.viewer.render(return_rgb_array=return_rgb_array)
 
-    def close(self):
+    def close(self) -> None:
         if self.viewer:
             self.viewer.close()
             self.viewer = None
@@ -213,7 +212,7 @@ class BallBeamEnv(gym.Env):
 
 
 class BallBeamContinuousEnv(BallBeamEnv):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.action_space = spaces.Box(self.umin, self.umax, shape=(1,), dtype=np.float32)
 
@@ -222,21 +221,22 @@ class BallBeamContinuousEnv(BallBeamEnv):
 
 
 class BallBeamDiscreteEnv(BallBeamEnv):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.action_space = spaces.Discrete(3)
 
     def action2theta(self, action):
         if action == 2:
-            return 3*CONFIG.constants.DEG2RAD
+            return 3 * CONFIG.constants.DEG2RAD
         elif action == 0:
-            return -3*CONFIG.constants.DEG2RAD
+            return -3 * CONFIG.constants.DEG2RAD
         else:
             return 0.0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from time import time
+
     from ballbeam.common.interface import choose_controller
 
     use_discrete_env = False
@@ -253,7 +253,7 @@ if __name__ == '__main__':
     # controller_type = 'Null'
     # controller_type = 'Sine'
     # controller_type = 'PID'
-    controller_type = 'LQG'
+    controller_type = "LQG"
     # controller_type = 'MPC'
     controller = choose_controller(controller_type)
 
@@ -287,13 +287,13 @@ if __name__ == '__main__':
         observation, reward, done, info = env.step(action)
         reward_tot += reward
 
-        spacer = '    '
-        print(i+1, end='    ')
-        print('%12.6f' % observation, end=spacer)
-        print('%12.6f' % reward, end=spacer)
-        print('%12.6f' % reward_tot, end=spacer)
-        print('%12.6f' % (time_now - time_last), end=spacer)
-        print('')
+        spacer = "    "
+        print(i + 1, end="    ")
+        print("%12.6f" % observation, end=spacer)
+        print("%12.6f" % reward, end=spacer)
+        print("%12.6f" % reward_tot, end=spacer)
+        print("%12.6f" % (time_now - time_last), end=spacer)
+        print("")
 
         time_last = time_now
         if done:

@@ -45,7 +45,7 @@ void setup(void) {
 
   lsm6ds33.setAccelDataRate(LSM6DS_RATE_26_HZ);
   Serial.print("Accelerometer data rate set to: ");
-  Serial.println("26 Hz"); 
+  Serial.println("26 Hz");
 
   lsm6ds33.configInt1(false, false, true); // accelerometer DRDY on INT1
   lsm6ds33.configInt2(false, true, false); // gyro DRDY on INT2
@@ -60,15 +60,15 @@ void setup(void) {
     int servo_out = map(i, 0, num_steps, servo_out_min, servo_out_max);
     Serial.println(servo_out);
     servo.writeMicroseconds(servo_out);
-    delay(1000);   
-    
+    delay(1000);
+
     for (int count = 1; count <= num_measurements; count += 1) {
       // Get a new normalized sensor event
       sensors_event_t accel;
       sensors_event_t gyro;
       sensors_event_t temp;
       lsm6ds33.getEvent(&accel, &gyro, &temp);
-      
+
       Serial.print(accel.acceleration.x, 6);
       Serial.print(" ");
       Serial.print(accel.acceleration.y, 6);
@@ -76,8 +76,8 @@ void setup(void) {
       Serial.print(accel.acceleration.z, 6);
       Serial.print("\n");
       delay(100);
-    }  
-    delay(500);  
+    }
+    delay(500);
     Serial.print("\n");
   }
   Serial.print("END DATA COLLECTION\n");

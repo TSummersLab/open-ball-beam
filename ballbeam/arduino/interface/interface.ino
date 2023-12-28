@@ -55,21 +55,21 @@ LinearController controller(K);
 LinearEstimator estimator(A, B, C, L, 0.001*DT);
 
 
-void setup() {  
+void setup() {
   // Begin I2C communication
   Wire.begin();
   delay(10);
-  
+
   // Begin serial connection
   Serial.begin(BAUD_RATE);
   delay(10);
-  
+
   // Start the sensor
   sensor.setTimeout(250);
   while (!sensor.init()) {
     Serial.println("Failed to detect and initialize sensor VL53L0X!");
     delay(1000);
-    }  
+    }
   sensor.setMeasurementTimingBudget(20000); // Set sensor timing budget, in microseconds (20000 is the minimum)
   sensor.startContinuous();
   delay(10);
@@ -78,7 +78,7 @@ void setup() {
   servo.attach(SERVO_PIN);  // Attach servo object
   servo.writeMicroseconds(SERVO_CMD_REST);
   delay(10);
-  
+
   // Diagnostic printing
   printer.print_header();
 }
@@ -88,13 +88,13 @@ void loop() {
   now = millis();
   time_change = now - last_time;
   if (time_change >= DT) {
-    setpoint = reference_trajectory.update_setpoint();    
-    reading = sensor.readRangeContinuousMillimeters();    
+    setpoint = reference_trajectory.update_setpoint();
+    reading = sensor.readRangeContinuousMillimeters();
     observation = reading_converter.update_observation(reading);
     ball_removed = ball.update_removed_status(observation);
     error = estimator.update_error(observation, setpoint);
     state_estimate = estimator.update_estimate(action, ball_removed, saturated);
-    action = controller.update_control(state_estimate, ball_removed);    
+    action = controller.update_control(state_estimate, ball_removed);
     command_issuer.issue_control(action);
     servo_cmd = command_issuer.get_command();
     saturated = command_issuer.get_saturated();

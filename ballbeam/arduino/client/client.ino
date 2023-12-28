@@ -27,7 +27,7 @@ void setup() {
   delay(50);
   Serial.begin(BAUD_RATE);  // Begin serial connection
   delay(50);
-  
+
   sensor.setTimeout(250);
   while (!sensor.init()) {
     Serial.println("Failed to detect and initialize sensor VL53L0X!");
@@ -50,16 +50,16 @@ void loop() {
   if (time_since_last >= DT) {
     // Take a sensor reading
     int reading = sensor.readRangeContinuousMillimeters();
-    
+
     // Write sensor reading to serial
     Serial.println(reading);
 
     // Read servo command from serial
     int servo_cmd = read_int();
-    
+
     // Fail safe to ensure servo pwm is always in the safe range
     servo_cmd = constrain(servo_cmd, SERVO_CMD_MIN, SERVO_CMD_MAX);
-    
+
     // Issue command to servo
     servo.writeMicroseconds(servo_cmd);
 

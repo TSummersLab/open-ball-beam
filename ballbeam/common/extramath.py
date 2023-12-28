@@ -2,7 +2,7 @@ import numpy as np
 
 
 def mix(a, b, x):
-    return x*a + (1 - x)*b
+    return x * a + (1 - x) * b
 
 
 def saturate(x, xmin, xmax):
@@ -17,7 +17,7 @@ def saturate(x, xmin, xmax):
 
 def clipped_mean(x, p=25):
     mask1 = x >= np.percentile(x, p)
-    mask2 = x <= np.percentile(x, 100-p)
+    mask2 = x <= np.percentile(x, 100 - p)
     mask = np.logical_and(mask1, mask2)
     return np.mean(x[mask])
 

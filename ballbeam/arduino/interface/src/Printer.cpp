@@ -7,7 +7,7 @@ extern const char SPACER;
 
 Printer::Printer() {
 	memcpy(this->mask, DIAGNOSTIC_PRINT_MASK, 8*sizeof(bool));
-	for (int i = 0; i < 8; i++) {		
+	for (int i = 0; i < 8; i++) {
 		strcpy(this->header_strings[i], HEADER_STRINGS[i]);
 	}
 	this->spacer = SPACER;

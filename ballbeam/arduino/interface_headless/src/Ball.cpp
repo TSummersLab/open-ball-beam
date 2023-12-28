@@ -34,7 +34,7 @@ bool Ball::update_removed_status(float obs) {
     else {
       count = 2 * timeout_count;
     }
-  } 
+  }
   return (count > timeout_count);
 }
 
@@ -44,4 +44,4 @@ long Ball::get_count() {
 
 bool Ball::is_removed() {
   return (count > timeout_count);
-}    
+}

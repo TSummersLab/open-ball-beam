@@ -1,7 +1,6 @@
-"""Pickle import/export utilities"""
-import pickle
+"""Pickle import/export utilities."""
 import os
-
+import pickle
 
 from ballbeam.common.path_io import create_directory
 
@@ -13,7 +12,7 @@ def pickle_import(filename_in):
     return data
 
 
-def pickle_export(dirname_out, filename_out, data):
+def pickle_export(dirname_out, filename_out, data) -> None:
     create_directory(dirname_out)
     path = os.path.join(dirname_out, filename_out)
     pickle_on = open(path, "wb")

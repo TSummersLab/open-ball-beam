@@ -28,9 +28,9 @@ void setup() {
   delay(50);
   Serial.begin(BAUD_RATE);  // Begin serial connection
   delay(50);
-  
+
   Serial.println("Sensor calibration");
-  
+
   sensor.setTimeout(250);
   while (!sensor.init()) {
     Serial.println("Failed to detect and initialize sensor VL53L0X!");
@@ -45,7 +45,7 @@ void setup() {
   delay(500);
 
   servo.writeMicroseconds(SERVO_CMD_REST);
-  
+
   Serial.print("\n");
   Serial.print("BEGIN DATA COLLECTION\n");
   delay(1000);
@@ -56,16 +56,16 @@ void setup() {
     Serial.print("True distance ");
     Serial.print(dist_cur);
     Serial.print("\n");
-    
-    delay(10000); // This wait time is for you to move the ball to the new position. Modify as needed.   
-    
+
+    delay(10000); // This wait time is for you to move the ball to the new position. Modify as needed.
+
     for (int count = 1; count <= num_measurements; count += 1) {
       // Get a new sensor reading
       int reading = sensor.readRangeContinuousMillimeters();
       Serial.println(reading);
       delay(100);
-    }  
-    delay(500);  
+    }
+    delay(500);
     Serial.print("\n");
   }
   Serial.print("END DATA COLLECTION\n");

@@ -18,9 +18,9 @@ class LinearEstimator {
     BLA::Matrix<1> y;
     float error;
     float DT;
-  
+
   public:
-    LinearEstimator(BLA::Matrix<2, 2> A, BLA::Matrix<2, 1> B, BLA::Matrix<1, 2> C, BLA::Matrix<2, 1> L, float DT);    
+    LinearEstimator(BLA::Matrix<2, 2> A, BLA::Matrix<2, 1> B, BLA::Matrix<1, 2> C, BLA::Matrix<2, 1> L, float DT);
     float update_error(float observation, float setpoint);
     BLA::Matrix<4> update_estimate(float u, bool ball_removed, bool saturated);
     float get_error();
@@ -36,7 +36,7 @@ class PIDEstimator {
     float DT;
     float e_last;
     BLA::Matrix<4> z;
-    
+
   public:
     PIDEstimator(float error_mix, float error_diff_mix, float DT);
     float update_error(float observation, float setpoint);

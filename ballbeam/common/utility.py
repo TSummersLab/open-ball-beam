@@ -1,11 +1,12 @@
-def print_arduino_vector(vector, var_name=None):
+def print_arduino_vector(vector, var_name=None) -> None:
     if var_name is not None:
-        print('%s = ' % var_name, end='')
-    print('{' + ', '.join(['%.6f' % num for num in vector]) + '}')
+        print("%s = " % var_name, end="")
+    print("{" + ", ".join(["%.6f" % num for num in vector]) + "}")
 
 
-class ConvertedObject(object):
+class ConvertedObject:
     pass
+
 
 def convert_dict_to_object(d):
     """Turns a (nested) dictionary into an object."""

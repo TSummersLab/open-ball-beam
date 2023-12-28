@@ -7,11 +7,11 @@
 // Class to handle the removed state of the ball
 class Ball {
   private:
-    bool removed;    
+    bool removed;
     float backstop;
     long count;
     long timeout_count;
-  
+
   public:
     Ball();
     Ball(bool removed, float backstop, long timeout_count);

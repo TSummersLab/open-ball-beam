@@ -19,7 +19,7 @@ LinearEstimator::LinearEstimator(BLA::Matrix<2, 2> A, BLA::Matrix<2, 1> B, BLA::
 }
 
 float LinearEstimator::update_error(float observation, float setpoint) {
-  // Compute error as difference between observation and setpoint     
+  // Compute error as difference between observation and setpoint
     error = observation - setpoint;
     return error;
 }
@@ -35,9 +35,9 @@ BLA::Matrix<4> LinearEstimator::update_estimate(float u, bool ball_removed, bool
     z = {0.0, 0.0, 0.0, 0.0};
   }
   else
-  {       
+  {
     // Output vector
-    y = {error};   
+    y = {error};
 
     // Update physical state estimate using LQE gain L
     BLA::Matrix<2> x_prev = z.Submatrix<2,1>(0,0);
@@ -47,15 +47,15 @@ BLA::Matrix<4> LinearEstimator::update_estimate(float u, bool ball_removed, bool
     // Put physical state in states 0, 1
     z(0) = x(0);
     z(1) = x(1);
-    
+
     // Put error sum in state 2, use anti-windup logic
     if (!saturated) {
       z(2) += error*DT;
     }
 
     // Put current control input in state 3
-    z(3) = u;      
-  }   
+    z(3) = u;
+  }
   return z;
 }
 
@@ -77,7 +77,7 @@ PIDEstimator::PIDEstimator(float error_mix, float error_diff_mix, float DT) {
 }
 
 float PIDEstimator::update_error(float observation, float setpoint) {
-  // Compute error as difference between observation and setpoint     
+  // Compute error as difference between observation and setpoint
     error = observation - setpoint;
     return error;
 }
@@ -89,24 +89,24 @@ BLA::Matrix<4> PIDEstimator::update_estimate(float u, bool ball_removed, bool sa
     z = {0.0, 0.0, 0.0, 0.0};
   }
   else
-  {    
-    float e_change_new = (error - e_last) / DT;    
-   
+  {
+    float e_change_new = (error - e_last) / DT;
+
     // Construct full state estimate
     // Put physical state in states 0, 1
     z(0) = mix(error, z(0), error_mix);
     z(1) = mix(e_change_new, z(1), error_diff_mix);
-    
+
     // Put error sum in state 2, use anti-windup logic
     if (!saturated) {
       z(2) += error*DT;
     }
 
     // Put current control input in state 3
-    z(3) = u;      
+    z(3) = u;
 
     // Remember variables for next time
-    e_last = error;    
+    e_last = error;
     Serial.println(e_last);
   }
   return z;

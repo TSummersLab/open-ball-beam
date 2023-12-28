@@ -11,10 +11,10 @@ class ReferenceTrajectory {
     float setpoint1;
     float setpoint2;
     unsigned long last;
-    unsigned long now;    
+    unsigned long now;
     unsigned long change;
-    unsigned long wait;    
-  
+    unsigned long wait;
+
   public:
     ReferenceTrajectory();
     ReferenceTrajectory(unsigned long wait, float setpoint1, float setpoint2);

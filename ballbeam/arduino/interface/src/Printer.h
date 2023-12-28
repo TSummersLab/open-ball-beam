@@ -13,7 +13,7 @@ public:
     Printer();
 
     void print_header();
-    void print(float setpoint, float error, BLA::Matrix<4> state_estimate, float action, unsigned int servo_cmd, unsigned long time_change);    
+    void print(float setpoint, float error, BLA::Matrix<4> state_estimate, float action, unsigned int servo_cmd, unsigned long time_change);
 };
 
 #endif

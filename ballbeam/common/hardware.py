@@ -1,23 +1,26 @@
-from time import time, sleep
 import struct
+from time import sleep, time
 
 import numpy as np
 from serial import Serial
-
 
 from ballbeam.common.extramath import saturate, sparse2dense_coeffs
 from ballbeam.configurators.configs import CONFIG
 
 
 class Hardware:
-    def __init__(self, ser=None, num_init_reads=3):
+    def __init__(self, ser=None, num_init_reads=3) -> None:
         # Configuration
         self.config = CONFIG.hardware
         self.reading_offset = CONFIG.sensor_calibration.READING_OFFSET
-        self.servo_coefficients = sparse2dense_coeffs(CONFIG.servo_calibration.coefficients,
-                                                      CONFIG.servo_calibration.powers)
-        self.sensor_coefficients = sparse2dense_coeffs(CONFIG.sensor_calibration.coefficients,
-                                                       CONFIG.sensor_calibration.powers)
+        self.servo_coefficients = sparse2dense_coeffs(
+            CONFIG.servo_calibration.coefficients,
+            CONFIG.servo_calibration.powers,
+        )
+        self.sensor_coefficients = sparse2dense_coeffs(
+            CONFIG.sensor_calibration.coefficients,
+            CONFIG.sensor_calibration.powers,
+        )
 
         # Initialize variables
         self.observation = None
@@ -27,15 +30,13 @@ class Hardware:
 
         # Start the serial connection
         if ser is None:
-            self.ser = Serial(port=self.config.COMM.PORT,
-                              baudrate=self.config.COMM.BAUD_RATE,
-                              timeout=1)
+            self.ser = Serial(port=self.config.COMM.PORT, baudrate=self.config.COMM.BAUD_RATE, timeout=1)
 
         # Check to make sure the hardware is working properly
-        for i in range(num_init_reads):
+        for _i in range(num_init_reads):
             raw_line = self.ser.readline()
-            line = raw_line.decode('utf-8').rstrip()
-            if 'Failed' in line:
+            line = raw_line.decode("utf-8").rstrip()
+            if "Failed" in line:
                 raise RuntimeError(line)
 
     def detect_ball_removed(self):
@@ -49,7 +50,7 @@ class Hardware:
             if self.observation <= self.config.SENSOR.DISTANCE.BACKSTOP_MM:
                 self.timeout -= 1
             else:
-                self.timeout = 2*self.config.TIMEOUT.STEPS
+                self.timeout = 2 * self.config.TIMEOUT.STEPS
         self.ball_removed = self.timeout > self.config.TIMEOUT.STEPS
         return self.ball_removed, self.timeout
 
@@ -74,14 +75,16 @@ class Hardware:
             beam_angle = np.arcsin(action_sat)
 
             # Saturate beam angle against the system limits
-            beam_angle, saturated2 = saturate(beam_angle,
-                                              self.config.BEAM.ANGLE.MIN*CONFIG.constants.DEG2RAD,
-                                              self.config.BEAM.ANGLE.MAX*CONFIG.constants.DEG2RAD)
+            beam_angle, saturated2 = saturate(
+                beam_angle,
+                self.config.BEAM.ANGLE.MIN * CONFIG.constants.DEG2RAD,
+                self.config.BEAM.ANGLE.MAX * CONFIG.constants.DEG2RAD,
+            )
 
             # Convert beam angle to an actuation PWM using the servo calibration polynomial coefficients
-            x = beam_angle*self.config.BEAM.ANGLE_SCALE
+            x = beam_angle * self.config.BEAM.ANGLE_SCALE
             y = np.polyval(coefficients, x)
-            actuation_deviation = int(y/self.config.SERVO.PWM_SCALE)
+            actuation_deviation = int(y / self.config.SERVO.PWM_SCALE)
             actuation = self.config.SERVO.CMD.MID + actuation_deviation
 
             # Saturate actuation PWM against system limits
@@ -92,7 +95,7 @@ class Hardware:
             self.saturated = saturated
             return actuation
 
-    def process(self, action):
+    def process(self, action) -> None:
         # Check if ball was removed
         self.detect_ball_removed()
 
@@ -100,13 +103,12 @@ class Hardware:
         actuation = self.action2actuation(action)
 
         # Send the actuation command to serial
-        out = struct.pack('h', actuation)
+        out = struct.pack("h", actuation)
         self.ser.write(out)
-        return
 
     def read_int(self):
         raw_line = self.ser.readline()
-        line = raw_line.decode('utf-8').rstrip()
+        line = raw_line.decode("utf-8").rstrip()
         try:
             val = int(line)
         except:
@@ -120,10 +122,9 @@ class Hardware:
         if coefficients is None:
             coefficients = self.sensor_coefficients
 
-        x = (reading - self.reading_offset)*self.config.SENSOR.READING_SCALE
+        x = (reading - self.reading_offset) * self.config.SENSOR.READING_SCALE
         y = np.polyval(coefficients, x)
-        observation = (0.001/self.config.SENSOR.OBSERVATION_SCALE)*y
-        return observation
+        return (0.001 / self.config.SENSOR.OBSERVATION_SCALE) * y
 
     def observe(self):
         # Read the measurement value from serial
@@ -133,28 +134,26 @@ class Hardware:
         self.observation = self.reading2observation(reading)
         return self.observation
 
-    def reset(self, x=None):
-        print('Resetting system...', end='')
+    def reset(self, x=None) -> None:
+        print("Resetting system...", end="")
         time_start = time()
         # give time for ball to roll down
         rest_time_seconds = 2.0
-        rest_steps = int(rest_time_seconds/self.config.COMM.DT)
-        for i in range(rest_steps):
-            out = struct.pack('h', self.config.SERVO.CMD.REST)
+        rest_steps = int(rest_time_seconds / self.config.COMM.DT)
+        for _i in range(rest_steps):
+            out = struct.pack("h", self.config.SERVO.CMD.REST)
             self.ser.write(out)
             self.observe()
         time_end = time()
         time_elapsed = time_end - time_start
-        print('system reset after resting %.3f seconds' % time_elapsed)
-        return
+        print("system reset after resting %.3f seconds" % time_elapsed)
 
-    def shutdown(self):
-        print('')
+    def shutdown(self) -> None:
+        print("")
         self.reset()
-        print('Shutting down')
+        print("Shutting down")
         sleep(0.1)
         # Close serial connection
         if self.ser is not None:
             self.ser.close()
         sleep(0.1)
-        return

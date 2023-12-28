@@ -20,15 +20,15 @@ ReferenceTrajectory::ReferenceTrajectory(unsigned long wait = SETPOINT_WAIT_TIME
   this->setpoint1 = setpoint1;
   this->setpoint2 = setpoint2;
   this->last = millis();
-  this->now = this->last;      
-  this->change = 0;      
-  this->wait = wait;      
+  this->now = this->last;
+  this->change = 0;
+  this->wait = wait;
 }
-  
-float ReferenceTrajectory::update_setpoint() {        
+
+float ReferenceTrajectory::update_setpoint() {
   now = millis();
   change = now - last;
-  
+
   if (change > wait)
   {
     if (setpoint == setpoint1)

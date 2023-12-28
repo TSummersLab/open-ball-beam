@@ -33,12 +33,12 @@ void loop() {
   if (time_since_last >= DT){
     Serial.print(time_since_last);
     Serial.print(" ");
-    time_since_begin = now - initial_time;  
+    time_since_begin = now - initial_time;
     x = sin(2*PI*frequency*time_since_begin/1000);
     y = 1000*x;
     servo_out = map(y, -1000, 1000, SERVO_CMD_MIN, SERVO_CMD_MAX);
     Serial.println(servo_out);
-    servo.writeMicroseconds(servo_out);    
+    servo.writeMicroseconds(servo_out);
     last = now;
   }
   else{
