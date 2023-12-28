@@ -2,17 +2,17 @@ import numpy as np
 import numpy.random as npr
 
 from ballbeam.common.extramath import saturate
-from ballbeam.configurators.configs import constants_config, hardware_config, model_config
+from ballbeam.configurators.configs import CONFIG
 
 
 XMIN, XMAX = -0.115, 0.115  # limits of physical position, in meters
 YMIN, YMAX = -0.125, 0.125  # limits of realized position measurement, in meters
-UMIN, UMAX = hardware_config.BEAM.ANGLE.MIN*constants_config.DEG2RAD, hardware_config.BEAM.ANGLE.MAX*constants_config.DEG2RAD
+UMIN, UMAX = CONFIG.hardware.BEAM.ANGLE.MIN*CONFIG.constants.DEG2RAD, CONFIG.hardware.BEAM.ANGLE.MAX*CONFIG.constants.DEG2RAD
 
 
 def step(f, x, u, w, dt=None, method='rk4'):
     if dt is None:
-        dt = hardware_config.COMM.DT
+        dt = CONFIG.hardware.COMM.DT
     if method == 'euler':
         x1 = np.copy(x)
         k1 = f(x1, u)
@@ -42,7 +42,7 @@ def step(f, x, u, w, dt=None, method='rk4'):
 class Simulator:
     def __init__(self, x0=None, servo_assumption='instant', process_noise_scale=1.0, sensor_noise_scale=1.0):
         # Configuration
-        self.config = model_config
+        self.config = CONFIG.model
 
         self.servo_assumption = servo_assumption
         if self.servo_assumption == 'instant':
@@ -134,4 +134,3 @@ class Simulator:
     def shutdown(self):
         print('')
         print('shutting down')
-        return

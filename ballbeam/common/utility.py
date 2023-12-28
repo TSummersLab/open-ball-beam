@@ -4,10 +4,13 @@ def print_arduino_vector(vector, var_name=None):
     print('{' + ', '.join(['%.6f' % num for num in vector]) + '}')
 
 
-class Dict2Obj(object):
+class ConvertedObject(object):
+    pass
+
+def convert_dict_to_object(d):
     """Turns a (nested) dictionary into an object."""
-    def __init__(self, dictionary):
-        for key in dictionary:
-            val = dictionary[key]
-            attr = Dict2Obj(val) if isinstance(val, dict) else val
-            setattr(self, key, attr)
+    out = ConvertedObject()
+    for key, value in d.items():
+        attr = convert_dict_to_object(value) if isinstance(value, dict) else value
+        setattr(out, key, attr)
+    return out

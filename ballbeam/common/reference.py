@@ -1,10 +1,11 @@
 import numpy as np
 
-from ballbeam.configurators.configs import hardware_config
+from ballbeam.configurators.configs import CONFIG
 
 
-# Base class for reference trajectory generators
 class Reference:
+    """Base class for reference trajectory generators."""
+
     def __init__(self):
         pass
 
@@ -13,6 +14,8 @@ class Reference:
 
 
 class ConstantReference(Reference):
+    """A reference at a constant value."""
+
     def __init__(self, center=0.0):
         super().__init__()
         self.center = center  # in meters
@@ -22,22 +25,26 @@ class ConstantReference(Reference):
 
 
 class PeriodicReference(ConstantReference):
-    def __init__(self, amplitude=0.050, frequency=0.1, waveform='sine'):
+    """A reference that changes periodically with a given waveform."""
+
+    def __init__(self, amplitude=0.050, frequency=0.1, waveform="sine"):
         super().__init__()
         self.amplitude = amplitude  # in meters
         self.frequency = frequency  # in Hz
         self.waveform = waveform
 
     def setpoint(self, t):
-        phase = self.frequency*t*hardware_config.COMM.DT
-        phase_rad = 2*np.pi*phase
-        if self.waveform == 'sine':
+        phase = self.frequency * t * CONFIG.hardware.COMM.DT
+        phase_rad = 2 * np.pi * phase
+        if self.waveform == "sine":
             deviation = np.sin(phase_rad)
-        elif self.waveform == 'rounded_square':
-            sharpness = 3  # bigger = closer to a square wave, smaller = closer to a sine wave
-            deviation = np.tanh(sharpness*np.sin(phase_rad))
-        elif self.waveform == 'square':
+        elif self.waveform == "rounded_square":
+            sharpness = (
+                3  # bigger = closer to a square wave, smaller = closer to a sine wave
+            )
+            deviation = np.tanh(sharpness * np.sin(phase_rad))
+        elif self.waveform == "square":
             deviation = np.sign(float(phase % 2 > 1) - 0.5)
         else:
             raise ValueError
-        return self.center + self.amplitude*deviation
+        return self.center + self.amplitude * deviation

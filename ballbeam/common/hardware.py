@@ -6,18 +6,18 @@ from serial import Serial
 
 
 from ballbeam.common.extramath import saturate, sparse2dense_coeffs
-from ballbeam.configurators.configs import constants_config, hardware_config, servo_calibration_config, sensor_calibration_config
+from ballbeam.configurators.configs import CONFIG
 
 
 class Hardware:
     def __init__(self, ser=None, num_init_reads=3):
         # Configuration
-        self.config = hardware_config
-        self.reading_offset = sensor_calibration_config.READING_OFFSET
-        self.servo_coefficients = sparse2dense_coeffs(servo_calibration_config.coefficients,
-                                                      servo_calibration_config.powers)
-        self.sensor_coefficients = sparse2dense_coeffs(sensor_calibration_config.coefficients,
-                                                       sensor_calibration_config.powers)
+        self.config = CONFIG.hardware
+        self.reading_offset = CONFIG.sensor_calibration.READING_OFFSET
+        self.servo_coefficients = sparse2dense_coeffs(CONFIG.servo_calibration.coefficients,
+                                                      CONFIG.servo_calibration.powers)
+        self.sensor_coefficients = sparse2dense_coeffs(CONFIG.sensor_calibration.coefficients,
+                                                       CONFIG.sensor_calibration.powers)
 
         # Initialize variables
         self.observation = None
@@ -75,8 +75,8 @@ class Hardware:
 
             # Saturate beam angle against the system limits
             beam_angle, saturated2 = saturate(beam_angle,
-                                              self.config.BEAM.ANGLE.MIN*constants_config.DEG2RAD,
-                                              self.config.BEAM.ANGLE.MAX*constants_config.DEG2RAD)
+                                              self.config.BEAM.ANGLE.MIN*CONFIG.constants.DEG2RAD,
+                                              self.config.BEAM.ANGLE.MAX*CONFIG.constants.DEG2RAD)
 
             # Convert beam angle to an actuation PWM using the servo calibration polynomial coefficients
             x = beam_angle*self.config.BEAM.ANGLE_SCALE

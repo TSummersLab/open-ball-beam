@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 import PyQt5
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtWidgets
 import keyboard
 
 from ballbeam.common.controller import Controller, SineController, PIDController, LQGController, MPCController
@@ -14,7 +14,7 @@ from ballbeam.common.cost import Cost
 from ballbeam.common.simulator import Simulator
 from ballbeam.common.hardware import Hardware
 from ballbeam.common.colors import Monokai
-from ballbeam.configurators.configs import plot_config, interface_config
+from ballbeam.configurators.configs import CONFIG
 
 
 def center_qt_window(win):
@@ -42,7 +42,7 @@ class MyPlotData:
     def __init__(self, plot, name=None, scrolling=None):
         self.plot = plot
         if scrolling is None:
-            self.scrolling = plot_config.SCROLL
+            self.scrolling = CONFIG.plot.SCROLL
 
         if name == 'position':
             ymin, ymax = -120, 120
@@ -78,7 +78,7 @@ class MyPlotData:
         self.plot.setYRange(ymin, ymax, padding=0)
         self.num_curves = len(names)
         if self.scrolling:
-            self.datas = [np.zeros(plot_config.LENGTH_STEPS) for i in range(self.num_curves)]
+            self.datas = [np.zeros(CONFIG.plot.LENGTH_STEPS) for i in range(self.num_curves)]
         else:
             self.datas = [np.zeros(1) for i in range(self.num_curves)]
         self.curves = [self.plot.plot(data, pen=pen, name=name) for data, pen, name in zip(self.datas, pens, names)]
@@ -133,7 +133,7 @@ def update_plot_data(plot_data_dict, data):
                     plot_data.datas[i][:-1] = plot_data.datas[i][1:]  # shift data in the array one sample left  # (see also: np.roll)
                     plot_data.datas[i][-1] = new_vals[i]  # add the new value to the end
                     plot_data.curves[i].setData(plot_data.datas[i])  # update the data in each curve
-                plot_data.curves[i].setPos(t - plot_config.LENGTH_STEPS, 0)  # shift the x range of each curve to achieve the scrolling effect
+                plot_data.curves[i].setPos(t - CONFIG.plot.LENGTH_STEPS, 0)  # shift the x range of each curve to achieve the scrolling effect
             else:
                 if i < plot_data.num_curves - 1:
                     plot_data.datas[i] = np.append(plot_data.datas[i], new_vals[i])  # shift data in the array one sample left  # (see also: np.roll)
@@ -148,10 +148,9 @@ def update_displayed_data(data):
     # print("%.6f    %.6f" % (system.x[2], controller.u))
     # print(actuation)
 
-    if plot_config.SHOW_KEYS is not None:
+    if CONFIG.plot.SHOW_KEYS is not None:
         global plot_data_dict
         update_plot_data(plot_data_dict, data)
-    return
 
 
 def update():
@@ -192,7 +191,6 @@ def update():
     # Data display
     data = Data(state_estimate, observation, action, setpoint, cost_dict, time_since_last)
     update_displayed_data(data)
-    return
 
 
 def choose_system(system_type):
@@ -225,7 +223,7 @@ def choose_reference(reference_type):
     elif reference_type == 'SlowSine':
         return PeriodicReference(waveform='sine', frequency=0.10)
     elif reference_type == 'FastSquare':
-        return PeriodicReference(waveform='square', frequency=0.20)
+        return PeriodicReference(waveform='square', frequency=0.20, amplitude=0.030)
     else:
         raise ValueError('Invalid reference trajectory type chosen!')
 
@@ -239,16 +237,16 @@ def choose_cost(cost_type):
 
 if __name__ == '__main__':
     # Choose the system type
-    system = choose_system(interface_config.system_type)
+    system = choose_system(CONFIG.interface.system_type)
 
     # Choose the controller
-    controller = choose_controller(interface_config.controller_type)
+    controller = choose_controller(CONFIG.interface.controller_type)
 
     # Choose the reference
-    reference = choose_reference(interface_config.reference_type)
+    reference = choose_reference(CONFIG.interface.reference_type)
 
     # Choose the cost
-    cost = choose_cost(interface_config.cost_type)
+    cost = choose_cost(CONFIG.interface.cost_type)
 
     # Initialization
     time_start = time()
@@ -261,7 +259,7 @@ if __name__ == '__main__':
     header_str = spacer.join(strings)
     print(header_str)
 
-    if plot_config.SHOW_KEYS is None:
+    if CONFIG.plot.SHOW_KEYS is None:
         while True:
             # TODO - make data history logging independent of plotting, and pass history data to realtime plotter
             # TODO - add option to save history data
@@ -271,15 +269,15 @@ if __name__ == '__main__':
         system.shutdown()
     else:
         pg.setConfigOptions(
-            antialias=plot_config.ANTIALIAS)  # enable antialiasing to get rid of jaggies, turn off to save render time
+            antialias=CONFIG.plot.ANTIALIAS)  # enable antialiasing to get rid of jaggies, turn off to save render time
         pg.setConfigOption('background', Monokai.k)
         pg.setConfigOption('foreground', Monokai.wt)
         win = pg.GraphicsLayoutWidget(show=True, title='Ball and beam control data')
-        win.resize(*plot_config.WINDOW_SIZE)  # Set the window size
+        win.resize(*CONFIG.plot.WINDOW_SIZE)  # Set the window size
         center_qt_window(win)
 
         plot_data_dict = {}
-        for key in plot_config.SHOW_KEYS:
+        for key in CONFIG.plot.SHOW_KEYS:
             plot = win.addPlot()
             setup_legend(plot)
             plot_data_dict[key] = MyPlotData(plot, key)

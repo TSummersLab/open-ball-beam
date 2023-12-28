@@ -20,4 +20,4 @@ def yaml_export(dirname_out, filename_out, data):
     with open(path, 'w', encoding="utf-8") as yaml_file:
         dump = yaml.dump(data, default_flow_style=False, allow_unicode=True, encoding=None, Dumper=Dumper)
         yaml_file.write(dump)
-    return
+        print(f"Wrote to {path}")

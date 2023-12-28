@@ -2,7 +2,7 @@ import numpy as np
 
 from ballbeam.common.extramath import mix
 from ballbeam.common.pickle_io import pickle_import
-from ballbeam.configurators.configs import constants_config, hardware_config
+from ballbeam.configurators.configs import CONFIG
 from ballbeam.static import CONFIGURATION_PATH
 
 
@@ -37,14 +37,14 @@ class Controller:
         error_new = observation - setpoint
         self.error = mix(error_new, self.error, self.error_mix)
 
-        error_diff_new = (error_new - self.error_last)/hardware_config.COMM.DT
+        error_diff_new = (error_new - self.error_last)/CONFIG.hardware.COMM.DT
         self.error_diff = mix(error_diff_new, self.error_diff, self.error_diff_mix)
 
         # This is anti-windup, functionality shared across multiple controllers
         if self.anti_windup and self.saturated:
             pass
         else:
-            self.error_sum += self.error*hardware_config.COMM.DT
+            self.error_sum += self.error*CONFIG.hardware.COMM.DT
 
         # Store the last error
         self.error_last = self.error
@@ -91,8 +91,8 @@ class SineController(Controller):
         self.beam_angle_max_deg = beam_angle_max_deg  # in degrees
 
     def my_update(self, t):
-        beam_angle_max_rad = self.beam_angle_max_deg/constants_config.RAD2DEG
-        self._u = beam_angle_max_rad*np.sin(2*np.pi*self.freq*t*hardware_config.COMM.DT)
+        beam_angle_max_rad = self.beam_angle_max_deg / CONFIG.constants.RAD2DEG
+        self._u = beam_angle_max_rad*np.sin(2 * np.pi * self.freq * t * CONFIG.hardware.COMM.DT)
 
 
 # PID with exponential smoothing filters

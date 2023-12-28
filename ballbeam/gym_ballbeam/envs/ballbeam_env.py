@@ -9,7 +9,7 @@ from ballbeam.common.reference import ConstantReference
 from ballbeam.common.cost import Cost
 from ballbeam.common.simulator import Simulator, XMIN, XMAX, YMIN, YMAX
 from ballbeam.common.hardware import Hardware
-from ballbeam.configurators.configs import constants_config, hardware_config
+from ballbeam.configurators.configs import CONFIG
 
 
 class BallBeamEnv(gym.Env):
@@ -21,10 +21,10 @@ class BallBeamEnv(gym.Env):
     def __init__(self, max_episode_length=200, hardware=False, seed=None):
         self.seed(seed)
         self.viewer = None
-        self.umin = hardware_config.BEAM.ANGLE.MIN*constants_config.DEG2RAD
-        self.umax = hardware_config.BEAM.ANGLE.MAX*constants_config.DEG2RAD
+        self.umin = CONFIG.hardware.BEAM.ANGLE.MIN*CONFIG.constants.DEG2RAD
+        self.umax = CONFIG.hardware.BEAM.ANGLE.MAX*CONFIG.constants.DEG2RAD
         self.action_space = None
-        # VMAX = (YMAX-YMIN)/hardware_config.COMM.DT
+        # VMAX = (YMAX-YMIN)/CONFIG.hardware.COMM.DT
         # VMIN = -VMAX
         # obs_lo, obs_hi = np.array([YMIN, VMIN], dtype=np.float32), np.array([YMAX, VMAX], dtype=np.float32)
         obs_lo, obs_hi = np.array(YMIN, dtype=np.float32), np.array(YMAX, dtype=np.float32)
@@ -228,9 +228,9 @@ class BallBeamDiscreteEnv(BallBeamEnv):
 
     def action2theta(self, action):
         if action == 2:
-            return 3*constants_config.DEG2RAD
+            return 3*CONFIG.constants.DEG2RAD
         elif action == 0:
-            return -3*constants_config.DEG2RAD
+            return -3*CONFIG.constants.DEG2RAD
         else:
             return 0.0
 

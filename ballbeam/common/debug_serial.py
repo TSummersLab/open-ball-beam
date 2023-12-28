@@ -1,6 +1,6 @@
 from serial import Serial
 
-from ballbeam.configurators.configs import hardware_config
+from ballbeam.configurators.configs import CONFIG
 
 
 
@@ -8,5 +8,5 @@ from ballbeam.configurators.configs import hardware_config
 # Idea: might be when Serial() or ser.close() is called it sends out some data that gets read by the Arduino and converted to a valid servo command pwm
 # Fix: make a state machine in the Arduino control.ino sketch and use a sentinel value e.g. 0 to tell the Arduino to always write servo commmand pwm to rest
 
-ser = Serial(hardware_config.COMM.PORT, hardware_config.COMM.BAUD_RATE, timeout=1)
+ser = Serial(CONFIG.hardware.COMM.PORT, CONFIG.hardware.COMM.BAUD_RATE, timeout=1)
 # ser.close()

@@ -2,7 +2,7 @@ import os
 
 from ballbeam.static import CONFIGURATION_PATH
 from ballbeam.common.yaml_io import yaml_import, yaml_export
-from ballbeam.common.utility import Dict2Obj
+from ballbeam.common.utility import convert_dict_to_object
 
 
 class Configurator:
@@ -26,14 +26,13 @@ class Configurator:
 
     def dump(self):
         yaml_export(self.dir, self.filename, self.data)
-        return
 
     def load(self):
         return yaml_import(self.filename)
 
     @property
     def data_obj(self):
-        return Dict2Obj(self.data)
+        return convert_dict_to_object(self.data)
 
 
 def configure_calibrate_all():
@@ -73,7 +72,7 @@ def configure_calibrate_all():
     from ballbeam.configurators.controller.mpc.design import main as mpc_main
     pid_main()
     lqg_main()
-    mpc_main()
+    # mpc_main()
 
 
 if __name__ == '__main__':
