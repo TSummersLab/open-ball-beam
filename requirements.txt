@@ -2,6 +2,7 @@ numpy
 scipy
 matplotlib
 pyqtgraph
+PyQt5
 pyserial
 keyboard
 ruamel.yaml<0.18.0
