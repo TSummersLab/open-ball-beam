@@ -19,4 +19,3 @@ def pickle_export(dirname_out, filename_out, data):
     pickle_on = open(path, "wb")
     pickle.dump(data, pickle_on)
     pickle_on.close()
-    return

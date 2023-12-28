@@ -1,9 +1,6 @@
-import os
 from pathlib import Path
 
-import ballbeam
-
-# REPLACE THIS WITH THE PATH TO YOUR BALLBEAM REPO
+# REPLACE THIS WITH THE PATH TO YOUR ballbeam
 BALLBEAM_PATH = Path("C:/Users/bjgra/GitHub/open-ball-beam/ballbeam")
 
 COMMON_PATH = BALLBEAM_PATH.joinpath('common')
