@@ -3,21 +3,27 @@ repos:
     rev: v3.2.0
     hooks:
       - id: trailing-whitespace
+        files: ^ballbeam/
       - id: end-of-file-fixer
+        files: ^ballbeam/
       - id: check-yaml
+        files: ^ballbeam/
       - id: check-added-large-files
+        files: ^ballbeam/
 
   - repo: https://github.com/psf/black
     rev: 23.7.0
     hooks:
       - id: black
         language_version: python3.11
+        files: ^ballbeam/
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.7
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes]
+        files: ^ballbeam/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.7.1
@@ -26,3 +32,4 @@ repos:
         additional_dependencies:
           [types-requests, types-setuptools, pandas-stubs]
         args: [--disallow-untyped-defs, --disallow-untyped-calls]
+        files: ^ballbeam/
