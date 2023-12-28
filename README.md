@@ -66,7 +66,7 @@ See the [Assembly and Setup Guide](docs/OBB_Assembly_and_Setup_Guide/OBB_Assembl
 
 ## Development info
 
-OBB was developed and tested on 64-bit Windows 10 using Anaconda environments, but likely will work on other platforms as well e.g. Linux.
+OBB was developed and tested on 64-bit Windows 10 using Anaconda environments, but should work on other platforms as well e.g. macOS & Linux.
 
 ## Features
 
@@ -132,13 +132,45 @@ It is recommended to use [virtualenv](https://docs.python.org/3/library/venv.htm
 4. Install the dependency packages
     - ```pip install -r requirements.txt```
 
-### OBB Installation
+#### OBB Installation
 
 1. Navigate to the root level directory of this package.
 2. Run the command `pip install -e .`
     - NOTE: The `-e` option is very important! This is what tells pip to install in "editable mode", so that changes you make to scripts actually take effect when you run them! Read the [official pip docs](https://pip.pypa.io/en/stable/topics/local-project-installs/#editable-installs) for more details.
 
-### General setup
+#### Development
+
+##### Pre-commit
+
+Run
+
+```bash
+pre-commit run --all-files
+```
+
+to run all pre-commit hooks, including style formatting and unit tests.
+
+##### Package management
+
+Update [`requirements.in`](requirements.in) with new direct dependencies.
+
+Then run
+
+```bash
+pip-compile requirements.in
+```
+
+to update the [`requirements.txt`](requirements.txt) file with all indirect and transitive dependencies.
+
+Then run
+
+```bash
+pip install -r requirements.txt
+```
+
+to update your virtual environment with the packages.
+
+### General setup (cross-platform Arduino <--> Python)
 
 1. Baud rate
     - A baud rate of 115200 is used throughout the project.

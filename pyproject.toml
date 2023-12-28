@@ -1,0 +1,29 @@
+[tool.black]
+line-length = 120
+target-version = ['py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+
+    # The following are specific to Black, we don't want those.
+    | blib2to3
+    | tests/data
+)/
+'''
+# preview is needed for long line string wrapping
+preview = true
+
+[tool.ruff]
+# Allow lines to be as long as 120 characters.
+line-length = 120
+select = ["ALL"]
+ignore = ["ANN101", "ANN102", "ANN401", "D203", "D213", "FBT001", "PD901", "S101"]

@@ -1,0 +1,14 @@
+numpy
+scipy
+matplotlib
+pyqtgraph
+PyQt5
+pyserial
+keyboard
+ruamel.yaml<0.18.0
+osqp
+pre-commit
+black
+ruff
+mypy
+pip-tools
