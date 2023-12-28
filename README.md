@@ -124,27 +124,13 @@ Try out reinforcement learning algorithms e.g. those from [OpenAI Spinning Up](h
 
 ### Python
 
-It is recommended to use [Anaconda](https://www.anaconda.com/) or [virtualenv](https://docs.python.org/3/library/venv.html) to create a separate environment to install OBB and its dependencies.
+It is recommended to use [virtualenv](https://docs.python.org/3/library/venv.html) to create a separate environment to install OBB and its dependencies.
 
-1. Open a terminal / command prompt / Anaconda Prompt.
-2. Create a new environment.
-3. Activate the desired environment.
-
-#### Dependencies
-
-- [NumPy](https://numpy.org/)
-- [SciPy](https://scipy.org/)
-- [Matplotlib](https://matplotlib.org/)
-- [PyQtGraph](https://www.pyqtgraph.org/)
-- [PySerial](https://pythonhosted.org/pyserial/)
-- [Keyboard](https://pypi.org/project/keyboard/)
-- [ruamel.yaml](https://yaml.readthedocs.io/en/latest/)
-- [OSQP](https://osqp.org/)
-
-Install the dependency packages with the following Conda commands
-
-- `conda install numpy scipy matplotlib pyserial keyboard ruamel.yaml`
-- `conda install -c conda-forge pyqtgraph osqp`
+1. Open a terminal / command prompt
+2. Create a new environment
+3. Activate the desired environment
+4. Install the dependency packages
+    - ```pip install -r requirements.txt```
 
 ### OBB Installation
 
