@@ -135,7 +135,8 @@ It is recommended to use [virtualenv](https://docs.python.org/3/library/venv.htm
 ### OBB Installation
 
 1. Navigate to the root level directory of this package.
-2. Run the command `pip install .`
+2. Run the command `pip install -e .`
+    - NOTE: The `-e` option is very important! This is what tells pip to install in "editable mode", so that changes you make to scripts actually take effect when you run them! Read the [official pip docs](https://pip.pypa.io/en/stable/topics/local-project-installs/#editable-installs) for more details.
 
 ### General setup
 
