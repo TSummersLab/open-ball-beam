@@ -4,5 +4,5 @@ matplotlib
 pyqtgraph
 pyserial
 keyboard
-ruamel.yaml
+ruamel.yaml<0.18.0
 osqp
