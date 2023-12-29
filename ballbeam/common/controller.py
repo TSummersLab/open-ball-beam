@@ -1,4 +1,9 @@
+"""Classes to represent controllers of the Open Ball & Beam."""
+
+from __future__ import annotations
+
 import numpy as np
+import numpy.typing as npt
 
 from ballbeam.common.extramath import mix
 from ballbeam.common.pickle_io import pickle_import
@@ -7,40 +12,52 @@ from ballbeam.static import CONFIGURATION_PATH
 
 
 class Controller:
-    def __init__(self, error_mix=1.0, error_diff_mix=1.0, anti_windup=False) -> None:
+    """Base class for a controller.
+
+    A controller is responsible for taking observations, and possibly other auxiliary signals,
+    and producing a control action as output.
+    """
+
+    def __init__(self, error_mix: float = 1.0, error_diff_mix: float = 1.0, *, use_anti_windup: bool = False) -> None:
+        """Initialize."""
         # Settings
         self.error_mix = error_mix  # 1.0 is no smoothing, << 1.0 is lots of smoothing
         self.error_diff_mix = error_diff_mix  # 1.0 is no smoothing, << 1.0 is lots of smoothing
-        self.anti_windup = anti_windup
+        self.use_anti_windup = use_anti_windup
 
         # Initialize self state
         self._u = 0.0  # control action
         self._z = np.zeros(4)  # augmented state estimate
 
-        self.error = 0
-        self.error_sum = 0
-        self.error_last = 0
-        self.error_diff = 0
+        self.error = 0.0
+        self.error_sum = 0.0
+        self.error_last = 0.0
+        self.error_diff = 0.0
 
         self.saturated = False
         self.ball_removed = False
 
-    def update_aux(self, saturated=False, ball_removed=False) -> None:
-        # arg: saturated, boolean, true if actuator is currently saturated
-        # arg: ball_removed, boolean, true if ball is currently removed from beam
+    def update_aux(self, *, saturated: bool = False, ball_removed: bool = False) -> None:
+        """Update auxiliary internal states.
+
+        Args:
+        ----
+        saturated: true if actuator is currently saturated
+        ball_removed: true if ball is currently removed from beam
+        """
         self.saturated = saturated
         self.ball_removed = ball_removed
 
-    def error_update(self, observation, setpoint) -> None:
-        # Update error based on current observation and setpoint
+    def error_update(self, observation: float, setpoint: float) -> None:
+        """Update error based on current observation and setpoint."""
         error_new = observation - setpoint
         self.error = mix(error_new, self.error, self.error_mix)
 
         error_diff_new = (error_new - self.error_last) / CONFIG.hardware.COMM.DT
         self.error_diff = mix(error_diff_new, self.error_diff, self.error_diff_mix)
 
-        # This is anti-windup, functionality shared across multiple controllers
-        if self.anti_windup and self.saturated:
+        # This logic provides anti-windup functionality
+        if self.use_anti_windup and self.saturated:
             pass
         else:
             self.error_sum += self.error * CONFIG.hardware.COMM.DT
@@ -48,18 +65,21 @@ class Controller:
         # Store the last error
         self.error_last = self.error
 
-    def my_update(self, t) -> None:
-        # Dummy
-        return
+    def my_update(self, t: int) -> None:
+        """Update additional internal state."""
 
-    def update(self, observation, setpoint, t) -> None:
-        # arg: observation, in meters
-        # arg: setpoint, target observation in meters
-        # arg: t, time index since start
+    def update(self, observation: float, setpoint: float, t: int) -> None:
+        """Update internal state of the controller.
 
+        Args:
+        ----
+        observation: observed value, in meters
+        setpoint: target observation value, in meters
+        t: time index since start
+        """
         self.error_update(observation, setpoint)
 
-        # This is deactivation upon ball removal, functionality shared across multiple controllers
+        # This logic provides deactivation upon ball removal.
         if self.ball_removed:
             self.error = 0
             self.error_sum = 0
@@ -67,33 +87,43 @@ class Controller:
             self.my_update(t)
 
     @property
-    def action(self):
+    def action(self) -> float:
+        """Controller's current action."""
         if self.ball_removed:
             self._u = 0.0
         return self._u
 
     @property
-    def state_estimate(self):
+    def state_estimate(self) -> npt.NDArray[np.float64]:
+        """Controller's current state estimate."""
         if self.ball_removed:
             self._z = np.zeros(4)
         return self._z
 
 
-# Sine "controller" that just generates a sine wave
 class SineController(Controller):
-    def __init__(self, freq=0.3, beam_angle_max_deg=2.0) -> None:
+    """Sine controller that just generates a sine wave.
+
+    This is not a closed-loop feedback controller.
+    """
+
+    def __init__(self, freq: float = 0.3, beam_angle_max_deg: float = 2.0) -> None:
+        """Initialize."""
         super().__init__()
         self.freq = freq  # in Hz
         self.beam_angle_max_deg = beam_angle_max_deg  # in degrees
 
-    def my_update(self, t) -> None:
+    def my_update(self, t: int) -> None:
+        """Update internal action."""
         beam_angle_max_rad = self.beam_angle_max_deg / CONFIG.constants.RAD2DEG
         self._u = beam_angle_max_rad * np.sin(2 * np.pi * self.freq * t * CONFIG.hardware.COMM.DT)
 
 
-# PID with exponential smoothing filters
 class PIDController(Controller):
-    def __init__(self, controller_params_path=None) -> None:
+    """Proportional-integral-derivative (PID) controller with exponential smoothing filters."""
+
+    def __init__(self, controller_params_path: str | None = None) -> None:
+        """Initialize."""
         super().__init__()
         if controller_params_path is None:
             controller_params_path = CONFIGURATION_PATH.joinpath("controller", "pid", "controller_params.pickle")
@@ -106,10 +136,11 @@ class PIDController(Controller):
         self.error_mix = controller_params["error_mix"]
         self.error_diff_mix = controller_params["error_diff_mix"]
 
-        self.anti_windup = controller_params["anti_windup"]
+        self.use_anti_windup = controller_params["use_anti_windup"]
 
-    def my_update(self, t) -> None:
-        # Control
+    def my_update(self, t: int) -> None:  # noqa: ARG002
+        """Compute internal control action and update internal state estimate."""
+        # Action
         u_p = self.kp * self.error
         u_i = self.ki * self.error_sum
         u_d = self.kd * self.error_diff
@@ -119,9 +150,11 @@ class PIDController(Controller):
         self._z = np.array([self.error, self.error_diff, self.error_sum, self._u])
 
 
-# Linear quadratic Gaussian (LQG) with integral feedback & control difference penalization
 class LQGController(Controller):
-    def __init__(self, controller_params_path=None) -> None:
+    """Linear quadratic Gaussian (LQG) with integral feedback & control difference penalization."""
+
+    def __init__(self, controller_params_path: str | None = None) -> None:
+        """Initialize."""
         super().__init__()
         if controller_params_path is None:
             controller_params_path = CONFIGURATION_PATH.joinpath("controller", "lqg", "controller_params.pickle")
@@ -135,7 +168,8 @@ class LQGController(Controller):
 
         self.AL = self.A - np.dot(self.L[:, None], self.C[None, :])
 
-    def my_update(self, t) -> None:
+    def my_update(self, t: int) -> None:  # noqa: ARG002
+        """Update internal state estimate and control action."""
         # State estimate using LQE
         # x is the physical state estimate
         # z is the augmented state estimate, which is the physical state augmented with the error_sum and action
@@ -149,14 +183,17 @@ class LQGController(Controller):
         self._u += du
 
 
-# Model predictive control (MPC) - same as LQG but with state and input constraint handling
 class MPCController(Controller):
-    def __init__(self, controller_params_path=None) -> None:
+    """Model predictive control (MPC) with integral feedback & control difference penalization.
+
+    Same as LQG but with state and input constraint handling.
+    """
+
+    def __init__(self, controller_params_path: str | None = None) -> None:
+        """Initialize."""
         super().__init__()
 
-        from ballbeam.common import (
-            emosqp,
-        )
+        from ballbeam.common import emosqp
 
         self.solver = emosqp
 
@@ -181,20 +218,30 @@ class MPCController(Controller):
         self.nx, self.nu = B4.shape
         self.bound_lwr, self.bound_upr = self.make_bounds(xmin, xmax, umin, umax)
 
-    def make_bounds(self, xmin, xmax, umin, umax):
+    def make_bounds(
+        self,
+        xmin: float,
+        xmax: float,
+        umin: float,
+        umax: float,
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+        """Make the bound constraints for the optimal control problem."""
         # Input and state constraints
         # Equality constraints
-        leq = np.hstack([np.zeros(self.nx), np.zeros(self.N * self.nx)])
-        ueq = leq
-        # Inequality constraints
-        lineq = np.hstack([np.kron(np.ones(self.N + 1), xmin), np.kron(np.ones(self.N), umin)])
-        uineq = np.hstack([np.kron(np.ones(self.N + 1), xmax), np.kron(np.ones(self.N), umax)])
-        # Equality + inequality constraints
-        l = np.hstack([leq, lineq])
-        u = np.hstack([ueq, uineq])
-        return l, u
+        lower_equality_bounds = np.hstack([np.zeros(self.nx), np.zeros(self.N * self.nx)])
+        upper_equality_bounds = lower_equality_bounds
 
-    def mpc_control(self, x0):
+        # Inequality constraints
+        lower_inequality_bounds = np.hstack([np.kron(np.ones(self.N + 1), xmin), np.kron(np.ones(self.N), umin)])
+        upper_inequality_bounds = np.hstack([np.kron(np.ones(self.N + 1), xmax), np.kron(np.ones(self.N), umax)])
+
+        # Equality + inequality constraints
+        lower_bounds = np.hstack([lower_equality_bounds, lower_inequality_bounds])
+        upper_bounds = np.hstack([upper_equality_bounds, upper_inequality_bounds])
+        return lower_bounds, upper_bounds
+
+    def mpc_control(self, x0: float) -> float:
+        """Solve optimal control problem and return the first control action."""
         # Update initial state
         self.bound_lwr[: self.nx] = -x0
         self.bound_upr[: self.nx] = -x0
@@ -202,9 +249,12 @@ class MPCController(Controller):
 
         # Solve
         res = self.solver.solve()
-        return res[0][-self.N * self.nu : -(self.N - 1) * self.nu]  # Return the first control input
 
-    def my_update(self, t) -> None:
+        # Return the first control action
+        return res[0][-self.N * self.nu : -(self.N - 1) * self.nu]
+
+    def my_update(self, t: int) -> None:  # noqa: ARG002
+        """Update internal state estimate and control action."""
         # State estimate using LQE
         # x is the physical state estimate
         # z is the augmented state estimate, which is the physical state augmented with the error_sum and action
@@ -214,6 +264,5 @@ class MPCController(Controller):
         self._z = np.hstack([x, self.error_sum, self._u])
 
         # Solve optimization problem
-        # du = mpc_control(self._z, self.l_base, self.u_base, self.nx, self.nu, self.N)[0]
         du = self.mpc_control(self._z)[0]
         self._u += du

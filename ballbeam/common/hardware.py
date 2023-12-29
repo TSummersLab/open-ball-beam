@@ -1,7 +1,13 @@
+"""Classes to represent the hardware of the Open Ball & Beam."""
+
+from __future__ import annotations
+
+import copy
 import struct
 from time import sleep, time
 
 import numpy as np
+import numpy.typing as npt
 from serial import Serial
 
 from ballbeam.common.extramath import saturate, sparse2dense_coeffs
@@ -9,7 +15,10 @@ from ballbeam.configurators.configs import CONFIG
 
 
 class Hardware:
-    def __init__(self, ser=None, num_init_reads=3) -> None:
+    """Class representing a physical Open Ball & Beam."""
+
+    def __init__(self, ser: Serial | None = None, num_init_reads: int = 3) -> None:
+        """Initialize."""
         # Configuration
         self.config = CONFIG.hardware
         self.reading_offset = CONFIG.sensor_calibration.READING_OFFSET
@@ -39,63 +48,81 @@ class Hardware:
             if "Failed" in line:
                 raise RuntimeError(line)
 
-    def detect_ball_removed(self):
-        # Timeout logic: detect if ball has been removed and cease operation if so, resume if not
+    def detect_ball_removed(self) -> tuple[bool, int]:
+        """Detect whether the ball has been removed or not.
+
+        Timeout logic:
+        If ball has been removed, cease operation.
+        If ball has not been removed, resume operation.
+        """
         if not self.ball_removed:
             if self.observation > self.config.SENSOR.DISTANCE.BACKSTOP_MM:
                 self.timeout += 1
             else:
                 self.timeout = 0
-        else:
+        else:  # noqa: PLR5501
             if self.observation <= self.config.SENSOR.DISTANCE.BACKSTOP_MM:
                 self.timeout -= 1
             else:
                 self.timeout = 2 * self.config.TIMEOUT.STEPS
+
         self.ball_removed = self.timeout > self.config.TIMEOUT.STEPS
         return self.ball_removed, self.timeout
 
-    def action2actuation(self, action, coefficients=None):
-        # Convert standard action to a raw actuation
-        # arg: action, beam_angle in radians
-        # arg: coefficients, polynomial coefficients in decreasing power order from d down to 0
-        # return action, in pwm microseconds for servo
+    def action2actuation(
+        self,
+        action: float,
+        coefficients: list[float] | None = None,
+        *,
+        linearize: bool = False,
+    ) -> int:
+        """Convert standard action to a raw actuation.
+
+        Args:
+        ----
+        action: beam_angle in radians
+        coefficients: polynomial coefficients in decreasing power order from d down to 0.
+        linearize: Make the linearization assumption that theta = np.sin(theta)
+
+        Return:
+        ------
+        action, in pwm microseconds for servo
+        """
         if self.ball_removed:
             return self.config.SERVO.CMD.MID
-        else:
-            if coefficients is None:
-                coefficients = self.servo_coefficients
 
-            # # This line makes the linearization assumption that theta = np.sin(theta)
-            # beam_angle = action
+        if coefficients is None:
+            coefficients = self.servo_coefficients
 
-            # Saturate action into interval [-1, 1] before passing thru np.arcsin()
-            # This will convert the action to a beam angle
-            action_sat, saturated1 = saturate(action, -1.0, 1.0)
+        # Saturate action into interval [-1, 1] before passing thru np.arcsin()
+        # This will convert the action to a beam angle
+        action_sat, saturated1 = saturate(action, -1.0, 1.0)
 
-            beam_angle = np.arcsin(action_sat)
+        beam_angle = copy.copy(action) if linearize else np.arcsin(action_sat)
 
-            # Saturate beam angle against the system limits
-            beam_angle, saturated2 = saturate(
-                beam_angle,
-                self.config.BEAM.ANGLE.MIN * CONFIG.constants.DEG2RAD,
-                self.config.BEAM.ANGLE.MAX * CONFIG.constants.DEG2RAD,
-            )
+        # Saturate beam angle against the system limits
+        beam_angle, saturated2 = saturate(
+            beam_angle,
+            self.config.BEAM.ANGLE.MIN * CONFIG.constants.DEG2RAD,
+            self.config.BEAM.ANGLE.MAX * CONFIG.constants.DEG2RAD,
+        )
 
-            # Convert beam angle to an actuation PWM using the servo calibration polynomial coefficients
-            x = beam_angle * self.config.BEAM.ANGLE_SCALE
-            y = np.polyval(coefficients, x)
-            actuation_deviation = int(y / self.config.SERVO.PWM_SCALE)
-            actuation = self.config.SERVO.CMD.MID + actuation_deviation
+        # Convert beam angle to an actuation PWM using the servo calibration polynomial coefficients
+        x = beam_angle * self.config.BEAM.ANGLE_SCALE
+        y = np.polyval(coefficients, x)
+        actuation_deviation = int(y / self.config.SERVO.PWM_SCALE)
+        actuation = self.config.SERVO.CMD.MID + actuation_deviation
 
-            # Saturate actuation PWM against system limits
-            actuation, saturated3 = saturate(actuation, self.config.SERVO.CMD.MIN, self.config.SERVO.CMD.MAX)
+        # Saturate actuation PWM against system limits
+        actuation, saturated3 = saturate(actuation, self.config.SERVO.CMD.MIN, self.config.SERVO.CMD.MAX)
 
-            saturated = saturated1 or saturated2 or saturated3
+        saturated = saturated1 or saturated2 or saturated3
 
-            self.saturated = saturated
-            return actuation
+        self.saturated = saturated
+        return actuation
 
-    def process(self, action) -> None:
+    def process(self, action: float) -> None:
+        """Process an action."""
         # Check if ball was removed
         self.detect_ball_removed()
 
@@ -106,27 +133,38 @@ class Hardware:
         out = struct.pack("h", actuation)
         self.ser.write(out)
 
-    def read_int(self):
+    def read_int(self) -> int:
+        """Read integer from serial connection."""
         raw_line = self.ser.readline()
         line = raw_line.decode("utf-8").rstrip()
         try:
             val = int(line)
-        except:
+        except Exception:  # noqa: BLE001
             val = 0
         return val
 
-    def reading2observation(self, reading, coefficients=None):
-        # Convert a raw reading to a standard observation
-        # arg: reading, in millimeters
-        # return: observation, in meters
+    def reading2observation(self, reading: int, coefficients: list[float] | None = None) -> float:
+        """Convert a raw reading to a standard observation.
+
+        Args:
+        ----
+        reading: reading of sensor distance, in millimeters.
+        coefficients: sensor calibration coefficients.
+
+        Return:
+        ------
+        observation: calibrated distance to ball, in meters
+        """
         if coefficients is None:
             coefficients = self.sensor_coefficients
 
         x = (reading - self.reading_offset) * self.config.SENSOR.READING_SCALE
         y = np.polyval(coefficients, x)
+
         return (0.001 / self.config.SENSOR.OBSERVATION_SCALE) * y
 
-    def observe(self):
+    def observe(self) -> float:
+        """Collect an observation."""
         # Read the measurement value from serial
         reading = self.read_int()
 
@@ -134,7 +172,8 @@ class Hardware:
         self.observation = self.reading2observation(reading)
         return self.observation
 
-    def reset(self, x=None) -> None:
+    def reset(self, x: npt.NDArray[np.float64] | None = None) -> None:  # noqa: ARG002
+        """Reset the system."""
         print("Resetting system...", end="")
         time_start = time()
         # give time for ball to roll down
@@ -149,6 +188,7 @@ class Hardware:
         print("system reset after resting %.3f seconds" % time_elapsed)
 
     def shutdown(self) -> None:
+        """Shut down the system."""
         print("")
         self.reset()
         print("Shutting down")

@@ -26,4 +26,4 @@ preview = true
 # Allow lines to be as long as 120 characters.
 line-length = 120
 select = ["ALL"]
-ignore = ["ANN101", "ANN102", "ANN401", "D203", "D213", "FBT001", "PD901", "S101"]
+ignore = ["ANN101", "ANN102", "ANN401", "D203", "D213", "FBT001", "N806", "PD901", "S101", "T201"]

@@ -46,3 +46,13 @@ class PeriodicReference(ConstantReference):
         else:
             raise ValueError
         return self.center + self.amplitude * deviation
+
+
+class SlowSineReference(PeriodicReference):
+    def __init__(self) -> None:
+        super().__init__(amplitude=0.050, frequency=0.10, waveform="sine")
+
+
+class FastSquareReference(PeriodicReference):
+    def __init__(self) -> None:
+        super().__init__(amplitude=0.030, frequency=0.20, waveform="square")
