@@ -1,7 +1,7 @@
 import os
 
 
-def create_directory(dirname_out) -> None:
+def create_directory(dirname_out: str) -> None:
     """Create target directory & all intermediate directories if nonexistent."""
     if not os.path.exists(dirname_out):
         os.makedirs(dirname_out)

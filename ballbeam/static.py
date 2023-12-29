@@ -1,3 +1,5 @@
+"""Static paths."""
+
 from pathlib import Path
 
 # REPLACE THIS WITH THE PATH TO YOUR ballbeam
