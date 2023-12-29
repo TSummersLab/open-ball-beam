@@ -1,28 +1,33 @@
 # Alternative Ball & Beam systems
 
 ## Quanser Ball and Beam
-- Commercial product available from https://www.quanser.com/products/ball-and-beam/ .
-- Price not publicly available, but indications are that the cost runs in the several thousand dollar range. https://ftp.esat.kuleuven.be/stadius/barrero/cacsd/www%20and%20mails/EDU_Pricing.pdf
+
+- Commercial product available from <https://www.quanser.com/products/ball-and-beam/> .
+- Price not publicly available, but indications are that the cost runs in the several thousand dollar range. <https://ftp.esat.kuleuven.be/stadius/barrero/cacsd/www%20and%20mails/EDU_Pricing.pdf>
 - Proprietary control software, tethered to a company for support and under-the-hood knowledge.
 
-
 ## BOBShield
+
 Recently BOBShield was proposed:
-- https://ieeexplore.ieee.org/abstract/document/9454013
-- https://github.com/gergelytakacs/AutomationShield/wiki/BoBShield
+
+- <https://ieeexplore.ieee.org/abstract/document/9454013>
+- <https://github.com/gergelytakacs/AutomationShield/wiki/BoBShield>
 
 Similarities between BOBShield and OBB:
+
 - Arduino-based
 - Open-source
 - Time-of-flight sensor
 
 Benefits of BOBShield over OBB:
+
 - Smaller
 - Lower cost
 - Lower part count
 - Ball cannot fall off
 
 Drawbacks of BOBShield under OBB:
+
 - Tube/beam length is very small.
   - Limited operational range.
   - Harder to visualize large excursions.
@@ -41,7 +46,9 @@ Drawbacks of BOBShield under OBB:
   - Cannot automatically calibrate servo angle against Earth's gravity.
 
 ## PyMoskito
-https://pymoskito.readthedocs.io/
+
+<https://pymoskito.readthedocs.io/>
+
 - Purely a software package.
-- Has a Ball & Beam model https://pymoskito.readthedocs.io/en/stable/examples/ballbeam.html
+- Has a Ball & Beam model <https://pymoskito.readthedocs.io/en/stable/examples/ballbeam.html>
 - Also has several other dynamical systems.
