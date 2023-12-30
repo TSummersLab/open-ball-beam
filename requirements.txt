@@ -14,6 +14,8 @@ click==8.1.7
     # via
     #   black
     #   pip-tools
+cmake==3.28.1
+    # via -r requirements.in
 colorama==0.4.6
     # via
     #   build
