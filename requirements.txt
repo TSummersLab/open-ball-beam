@@ -8,6 +8,8 @@ black==23.12.1
     # via -r requirements.in
 build==1.0.3
     # via pip-tools
+cffi==1.16.0
+    # via pygit2
 cfgv==3.4.0
     # via pre-commit
 click==8.1.7
@@ -73,6 +75,10 @@ platformdirs==4.1.0
     #   black
     #   virtualenv
 pre-commit==3.6.0
+    # via -r requirements.in
+pycparser==2.21
+    # via cffi
+pygit2==1.13.3
     # via -r requirements.in
 pyparsing==3.1.1
     # via matplotlib

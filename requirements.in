@@ -8,6 +8,7 @@ keyboard
 ruamel.yaml<0.18.0
 osqp
 cmake  # required for osqp codegen
+pygit2
 pre-commit
 black
 ruff
