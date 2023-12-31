@@ -30,6 +30,12 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
-          [types-requests, types-setuptools, pandas-stubs]
+          [
+            types-requests,
+            types-setuptools,
+            types-keyboard,
+            types-pyserial,
+            pandas-stubs,
+          ]
         args: [--disallow-untyped-defs, --disallow-untyped-calls]
         files: ^ballbeam/
