@@ -35,6 +35,7 @@ repos:
             types-setuptools,
             types-keyboard,
             types-pyserial,
+            matplotlib-stubs,
             pandas-stubs,
             PyQt5-stubs,
           ]
