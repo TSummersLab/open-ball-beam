@@ -31,12 +31,6 @@ class Hardware:
             CONFIG.sensor_calibration.powers,
         )
 
-        # Initialize variables
-        self.observation = None
-        self.timeout = 0
-        self.saturated = False
-        self.ball_removed = False
-
         # Start the serial connection
         if ser is None:
             self.ser = Serial(port=self.config.COMM.PORT, baudrate=self.config.COMM.BAUD_RATE, timeout=1)
@@ -47,6 +41,12 @@ class Hardware:
             line = raw_line.decode("utf-8").rstrip()
             if "Failed" in line:
                 raise RuntimeError(line)
+
+        # Initialize variables
+        self.observation = self.observe()
+        self.timeout = 0
+        self.saturated = False
+        self.ball_removed = False
 
     def detect_ball_removed(self) -> tuple[bool, int]:
         """Detect whether the ball has been removed or not.

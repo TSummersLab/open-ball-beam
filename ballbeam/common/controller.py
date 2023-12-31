@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.typing as npt
 
@@ -9,6 +11,9 @@ from ballbeam.common.extramath import mix
 from ballbeam.common.pickle_io import pickle_import
 from ballbeam.configurators.configs import CONFIG
 from ballbeam.static import CONFIGURATION_PATH
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class Controller:
@@ -122,7 +127,7 @@ class SineController(Controller):
 class PIDController(Controller):
     """Proportional-integral-derivative (PID) controller with exponential smoothing filters."""
 
-    def __init__(self, controller_params_path: str | None = None) -> None:
+    def __init__(self, controller_params_path: Path | str | None = None) -> None:
         """Initialize."""
         super().__init__()
         if controller_params_path is None:
@@ -153,7 +158,7 @@ class PIDController(Controller):
 class LQGController(Controller):
     """Linear quadratic Gaussian (LQG) with integral feedback & control difference penalization."""
 
-    def __init__(self, controller_params_path: str | None = None) -> None:
+    def __init__(self, controller_params_path: Path | str | None = None) -> None:
         """Initialize."""
         super().__init__()
         if controller_params_path is None:
@@ -189,11 +194,19 @@ class MPCController(Controller):
     Same as LQG but with state and input constraint handling.
     """
 
-    def __init__(self, controller_params_path: str | None = None) -> None:
+    def __init__(self, controller_params_path: Path | str | None = None) -> None:
         """Initialize."""
         super().__init__()
 
-        from ballbeam.common import emosqp
+        # Need to add the root path where the emosqp python extension module file is located
+        # to enable `import emosqp` to work
+        import sys
+
+        from ballbeam.static import ROOT_PATH
+
+        sys.path.append(str(ROOT_PATH))
+
+        import emosqp  # type: ignore[import-not-found]
 
         self.solver = emosqp
 
@@ -240,18 +253,19 @@ class MPCController(Controller):
         upper_bounds = np.hstack([upper_equality_bounds, upper_inequality_bounds])
         return lower_bounds, upper_bounds
 
-    def mpc_control(self, x0: float) -> float:
+    def mpc_control(self, x0: npt.NDArray[np.float64]) -> float:
         """Solve optimal control problem and return the first control action."""
         # Update initial state
-        self.bound_lwr[: self.nx] = -x0
-        self.bound_upr[: self.nx] = -x0
+        nx = self.nx
+        self.bound_lwr[:nx] = -x0
+        self.bound_upr[:nx] = -x0
         self.solver.update_bounds(self.bound_lwr, self.bound_upr)
 
         # Solve
         res = self.solver.solve()
 
         # Return the first control action
-        return res[0][-self.N * self.nu : -(self.N - 1) * self.nu]
+        return res[0][-self.N * self.nu : -(self.N - 1) * self.nu][0]
 
     def my_update(self, t: int) -> None:  # noqa: ARG002
         """Update internal state estimate and control action."""
@@ -264,5 +278,10 @@ class MPCController(Controller):
         self._z = np.hstack([x, self.error_sum, self._u])
 
         # Solve optimization problem
-        du = self.mpc_control(self._z)[0]
+        du = self.mpc_control(self._z)
+
+        # Handle failures ~gracefully
+        if du is None:
+            du = 0.0
+
         self._u += du

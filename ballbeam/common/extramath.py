@@ -17,7 +17,7 @@ def mix(a: Any, b: Any, x: Any) -> Any:
     return x * a + (1 - x) * b
 
 
-def saturate(x: int | float, xmin: int | float, xmax: int | float) -> tuple[int | float, bool]:
+def saturate(x: float, xmin: float, xmax: float) -> tuple[float, bool]:
     """Saturate the input value x to bounds xmin and xmax.
 
     Similar to np.clip, but in addition returns a bool that indicates whether clipping occurred.

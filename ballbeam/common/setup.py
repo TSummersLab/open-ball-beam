@@ -1,3 +1,5 @@
+"""Set up the gym ballbeam environment."""
+
 from setuptools import setup
 
 setup(

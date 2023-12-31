@@ -1,3 +1,5 @@
+"""Classes representing reference trajectories."""
+
 import numpy as np
 
 from ballbeam.configurators.configs import CONFIG
@@ -6,34 +8,36 @@ from ballbeam.configurators.configs import CONFIG
 class Reference:
     """Base class for reference trajectory generators."""
 
-    def __init__(self) -> None:
-        pass
-
-    def setpoint(self, t) -> float:
+    def setpoint(self, t: int) -> float:  # noqa: ARG002
+        """Compute the setpoint at time index t."""
         return 0.0
 
 
 class ConstantReference(Reference):
     """A reference at a constant value."""
 
-    def __init__(self, center=0.0) -> None:
+    def __init__(self, center: float = 0.0) -> None:
+        """Initialize."""
         super().__init__()
         self.center = center  # in meters
 
-    def setpoint(self, t):
+    def setpoint(self, t: int) -> float:  # noqa: ARG002
+        """Compute the setpoint at time index t."""
         return self.center
 
 
 class PeriodicReference(ConstantReference):
     """A reference that changes periodically with a given waveform."""
 
-    def __init__(self, amplitude=0.050, frequency=0.1, waveform="sine") -> None:
+    def __init__(self, amplitude: float = 0.050, frequency: float = 0.1, waveform: str = "sine") -> None:
+        """Initialize."""
         super().__init__()
         self.amplitude = amplitude  # in meters
         self.frequency = frequency  # in Hz
         self.waveform = waveform
 
-    def setpoint(self, t):
+    def setpoint(self, t: int) -> float:
+        """Compute the setpoint at time index t."""
         phase = self.frequency * t * CONFIG.hardware.COMM.DT
         phase_rad = 2 * np.pi * phase
         if self.waveform == "sine":
@@ -49,10 +53,16 @@ class PeriodicReference(ConstantReference):
 
 
 class SlowSineReference(PeriodicReference):
+    """A slow sine reference trajectory."""
+
     def __init__(self) -> None:
+        """Initialize."""
         super().__init__(amplitude=0.050, frequency=0.10, waveform="sine")
 
 
 class FastSquareReference(PeriodicReference):
+    """A fast square reference trajectory."""
+
     def __init__(self) -> None:
+        """Initialize."""
         super().__init__(amplitude=0.030, frequency=0.20, waveform="square")

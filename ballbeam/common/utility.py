@@ -10,17 +10,18 @@ if TYPE_CHECKING:
 
 
 def print_arduino_vector(vector: npt.NDArray[Any], var_name: str | None = None) -> None:
+    """Print a vector as a string for use in Arduino code."""
     if var_name is not None:
         print(f"{var_name} = ", end="")
     print("{" + ", ".join([f"{num:.6f}" for num in vector]) + "}")
 
 
 class ConvertedObject:
-    pass
+    """Dummy object for conversion from dict."""
 
 
 def convert_dict_to_object(d: dict[str, Any]) -> ConvertedObject:
-    """Turns a (nested) dictionary into an object."""
+    """Convert a (nested) dictionary to an object."""
     out = ConvertedObject()
     for key, value in d.items():
         attr = convert_dict_to_object(value) if isinstance(value, dict) else value

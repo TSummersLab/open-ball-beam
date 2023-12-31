@@ -1,3 +1,5 @@
+"""Classes representing costs."""
+
 from __future__ import annotations
 
 import copy
@@ -12,6 +14,7 @@ class Cost:
         self.u = copy.copy(u0)  # action
 
     def take(self, e: float, u: float) -> dict[str, float]:
+        """Take the cost of the current error and action."""
         c_error = 10 * abs(e)
         c_action = 8 * abs(u)
         c_action_diff = 3 * abs(u - self.u)

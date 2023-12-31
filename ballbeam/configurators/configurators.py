@@ -71,8 +71,9 @@ def configure_calibrate_all() -> None:
         configurator.dump()
 
     # Controllers
-    from ballbeam.configurators.controller.lqg.design import main as lqg_main
     from ballbeam.configurators.controller.pid.design import main as pid_main
+    from ballbeam.configurators.controller.lqg.design import main as lqg_main
+    from ballbeam.configurators.controller.mpc.design import main as mpc_main
 
     pid_main()
     lqg_main()

@@ -8,13 +8,13 @@ from ballbeam.common.pickle_io import pickle_export, pickle_import
 from ballbeam.static import CONFIGURATION_PATH
 
 # Pathing
-dirname_lqg = CONFIGURATION_PATH.joinpath("controller", "lqg")
-dirname_mpc = CONFIGURATION_PATH.joinpath("controller", "mpc")
+DIRECTORY_NAME_LQG = CONFIGURATION_PATH.joinpath("controller", "lqg")
+DIRECTORY_NAME_MPC = CONFIGURATION_PATH.joinpath("controller", "mpc")
 
 
 def make_design_data():
     # Copy from LQG
-    path_in = os.path.join(dirname_lqg, "design_data.pickle")
+    path_in = os.path.join(DIRECTORY_NAME_LQG, "design_data.pickle")
     design_data = pickle_import(path_in)
 
     # Terminal state penalty
@@ -36,15 +36,15 @@ def make_design_data():
     N = 20
     design_data["N"] = N
 
-    pickle_export(dirname_out=dirname_mpc, filename_out="design_data.pickle", data=design_data)
+    pickle_export(dirname_out=DIRECTORY_NAME_MPC, filename_out="design_data.pickle", data=design_data)
     return design_data
 
 
 def make_controller_params():
     # Copy from LQG
-    path_in = os.path.join(dirname_lqg, "controller_params.pickle")
+    path_in = os.path.join(DIRECTORY_NAME_LQG, "controller_params.pickle")
     controller_params = pickle_import(path_in)
-    pickle_export(dirname_out=dirname_mpc, filename_out="controller_params.pickle", data=controller_params)
+    pickle_export(dirname_out=DIRECTORY_NAME_MPC, filename_out="controller_params.pickle", data=controller_params)
     return controller_params
 
 
@@ -81,7 +81,7 @@ def make_problem(A, B, Q, QN, R, xmin, xmax, umin, umax, N):
 
 
 def make_codegen_solver() -> None:
-    design_data_path = dirname_mpc.joinpath("design_data.pickle")
+    design_data_path = DIRECTORY_NAME_MPC.joinpath("design_data.pickle")
     controller_design_data = pickle_import(design_data_path)
 
     A, B, Q, QN, R = (controller_design_data["controller"][key] for key in ["A4", "B4", "Q4", "QN4", "R4"])
@@ -91,7 +91,7 @@ def make_codegen_solver() -> None:
     nx, nu = B.shape
     l_var, u_var, prob = make_problem(A, B, Q, QN, R, xmin, xmax, umin, umax, N)
 
-    codegen_dir = dirname_mpc.joinpath("codegen")
+    codegen_dir = DIRECTORY_NAME_MPC.joinpath("codegen")
     prob.codegen(codegen_dir, python_ext_name="emosqp", force_rewrite=True)
 
 

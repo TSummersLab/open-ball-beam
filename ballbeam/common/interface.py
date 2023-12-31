@@ -9,8 +9,8 @@ from typing import Any
 import keyboard
 import numpy as np
 import PyQt5
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtWidgets
+import pyqtgraph as pg  # type: ignore[import]
+from pyqtgraph.Qt import QtCore, QtWidgets  # type: ignore[import]
 
 from ballbeam.common.colors import Monokai
 from ballbeam.common.controller import Controller, LQGController, MPCController, PIDController, SineController
@@ -24,8 +24,8 @@ from ballbeam.configurators.configs import CONFIG
 def center_qt_window(win: pg.GraphicsLayoutWidget) -> None:
     """Center a QT window on the screen."""
     frameGm = win.frameGeometry()
-    screen = PyQt5.QtWidgets.QApplication.desktop().screenNumber(PyQt5.QtWidgets.QApplication.desktop().cursor().pos())
-    centerPoint = PyQt5.QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+    screen = PyQt5.QtWidgets.QApplication.desktop().screenNumber(PyQt5.QtWidgets.QApplication.desktop().cursor().pos())  # type: ignore[attr-defined]
+    centerPoint = PyQt5.QtWidgets.QApplication.desktop().screenGeometry(screen).center()  # type: ignore[attr-defined]
     frameGm.moveCenter(centerPoint)
     win.move(frameGm.topLeft())
 
@@ -38,7 +38,8 @@ def setup_legend(plot: pg.PlotItem) -> None:
         for single_item in item:
             if isinstance(single_item, pg.graphicsItems.LabelItem.LabelItem):
                 single_item.setText(single_item.text, **legendLabelStyle)
-    legend.setBrush((64, 64, 64, 224))  # legend background color
+    # Set legend background color
+    legend.setBrush((64, 64, 64, 224))
 
 
 class MyPlotData:
@@ -51,7 +52,7 @@ class MyPlotData:
             self.scrolling = CONFIG.plot.SCROLL
 
         if name == "position":
-            ymin, ymax = -120, 120
+            ymin, ymax = -120.0, 120.0
             pens = [
                 pg.mkPen(color=Monokai.b, width=2, style=QtCore.Qt.SolidLine),
                 pg.mkPen(color=Monokai.g, width=2, style=QtCore.Qt.SolidLine),
@@ -60,7 +61,7 @@ class MyPlotData:
             ]
             names = ["Position (measured)", "Position (estimated)", "Position (reference)", None]
         elif name == "state_estimate":
-            ymin, ymax = -1, 1
+            ymin, ymax = -1.0, 1.0
             pens = [
                 pg.mkPen(color=Monokai.b, width=2, style=QtCore.Qt.SolidLine),
                 pg.mkPen(color=Monokai.g, width=2, style=QtCore.Qt.SolidLine),
@@ -76,7 +77,7 @@ class MyPlotData:
             ]
             names = ["Action", None]
         elif name == "cost":
-            ymin, ymax = 0, 1
+            ymin, ymax = 0.0, 1.0
             pens = [
                 pg.mkPen(color=Monokai.b, width=2, style=QtCore.Qt.SolidLine),
                 pg.mkPen(color=Monokai.g, width=2, style=QtCore.Qt.SolidLine),
@@ -86,7 +87,8 @@ class MyPlotData:
             ]
             names = ["Cost", "Error cost", "Action cost", "Action diff cost", None]
         else:
-            raise ValueError
+            msg = f'Invalid plot data name "{name}"'
+            raise ValueError(msg)
 
         self.plot.enableAutoRange(axis="y", enable=False)
         self.plot.setYRange(min=ymin, max=ymax, padding=0)
