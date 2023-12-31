@@ -12,7 +12,7 @@ Loader = yaml.Loader
 Dumper = yaml.Dumper
 
 
-def yaml_import(path: str | Path) -> Any:
+def yaml_import(path: Path | str) -> Any:
     """Import data from a YAML file."""
     if isinstance(path, str):
         path = Path(path)
@@ -20,7 +20,7 @@ def yaml_import(path: str | Path) -> Any:
         return yaml.load(ymlfile, Loader=Loader)
 
 
-def yaml_export(dirname_out: str, filename_out: str, data: Any) -> None:
+def yaml_export(dirname_out: Path | str, filename_out: str, data: Any) -> None:
     """Export data to a YAML file."""
     create_directory(dirname_out)
     path = Path(dirname_out) / filename_out

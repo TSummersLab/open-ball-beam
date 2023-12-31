@@ -5,13 +5,16 @@ from __future__ import annotations
 import copy
 import struct
 from time import sleep, time
+from typing import TYPE_CHECKING
 
 import numpy as np
-import numpy.typing as npt
 from serial import Serial
 
 from ballbeam.common.extramath import saturate, sparse2dense_coeffs
 from ballbeam.configurators.configs import CONFIG
+
+if TYPE_CHECKING:
+    from ballbeam.common.types import NDA
 
 
 class Hardware:
@@ -172,7 +175,7 @@ class Hardware:
         self.observation = self.reading2observation(reading)
         return self.observation
 
-    def reset(self, x: npt.NDArray[np.float64] | None = None) -> None:  # noqa: ARG002
+    def reset(self, x: NDA | None = None) -> None:  # noqa: ARG002
         """Reset the system."""
         print("Resetting system...", end="")
         time_start = time()

@@ -1,3 +1,5 @@
+"""Configurator for plotting."""
+
 from ballbeam.configurators.configurators import Configurator
 
 

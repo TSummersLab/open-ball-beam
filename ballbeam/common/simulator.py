@@ -3,14 +3,16 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import numpy.random as npr
-import numpy.typing as npt
 
 from ballbeam.common.extramath import saturate
 from ballbeam.configurators.configs import CONFIG
+
+if TYPE_CHECKING:
+    from ballbeam.common.types import NDA
 
 XMIN, XMAX = -0.115, 0.115  # limits of physical position, in meters
 YMIN, YMAX = -0.125, 0.125  # limits of realized position measurement, in meters
@@ -20,14 +22,14 @@ UMIN, UMAX = (
 )
 
 
-def step(  # noqa: PLR0913
-    f: Callable[[npt.NDArray[np.float64], float], npt.NDArray[np.float64]],
-    x: npt.NDArray[np.float64],
+def step(
+    f: Callable[[NDA, float], NDA],
+    x: NDA,
     u: float,
-    w: npt.NDArray[np.float64],
+    w: NDA,
     dt: float | None = None,
     method: str = "rk4",
-) -> npt.NDArray[np.float64]:
+) -> NDA:
     """Compute a single step using a numerical integration scheme.
 
     Args:
@@ -73,9 +75,9 @@ def step(  # noqa: PLR0913
 class Simulator:
     """Class representing a simulation of the Open Ball & Beam."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
-        x0: npt.NDArray[np.float64] | None = None,
+        x0: NDA | None = None,
         servo_assumption: str = "instant",
         process_noise_scale: float = 1.0,
         sensor_noise_scale: float = 1.0,
@@ -112,7 +114,7 @@ class Simulator:
 
         self.rng = npr.default_rng(random_seed)
 
-    def generate_process_noise(self, *, do_kick: bool = False) -> npt.NDArray[np.float64]:
+    def generate_process_noise(self, *, do_kick: bool = False) -> NDA:
         """Generate process noise."""
         noise = self.rng.multivariate_normal(np.zeros(self.n), self.W)
         if do_kick:
@@ -123,11 +125,11 @@ class Simulator:
             kick = 0
         return noise + kick
 
-    def generate_observation_noise(self) -> npt.NDArray[np.float64]:
+    def generate_observation_noise(self) -> NDA:
         """Generate observation noise."""
         return self.rng.multivariate_normal(np.zeros(self.p), self.V)[0]
 
-    def f(self, x: npt.NDArray[np.float64], u: float) -> npt.NDArray[np.float64]:
+    def f(self, x: NDA, u: float) -> NDA:
         """Compute the output of the dynamics function i.e. x_dot."""
         # TODO(bgravell): implement the missing term related to \dot{theta}^2  # noqa: TD003, FIX002
         # TODO(bgravell): implement deadband for servo commands that do not exceed 3ms PWM difference  # noqa: TD003, FIX002, E501
@@ -178,7 +180,7 @@ class Simulator:
         msg = f'Invalid servo assumption "{self.servo_assumption}"'
         raise ValueError(msg)
 
-    def process(self, u: float) -> npt.NDArray[np.float64]:
+    def process(self, u: float) -> NDA:
         """Process a control action."""
         u, self.saturated = saturate(u, UMIN, UMAX)
         w = self.generate_process_noise()
@@ -192,7 +194,7 @@ class Simulator:
         y = self.x[0] + v
         return float(np.clip(y, YMIN, YMAX))
 
-    def reset(self, x: npt.NDArray[np.float64] | None = None) -> None:
+    def reset(self, x: NDA | None = None) -> None:
         """Reset the system."""
         if x is None:
             x = np.zeros(self.n)

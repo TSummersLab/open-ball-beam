@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-import numpy.typing as npt
 
 from ballbeam.common.extramath import mix
 from ballbeam.common.pickle_io import pickle_import
@@ -14,6 +13,8 @@ from ballbeam.static import CONFIGURATION_PATH
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from ballbeam.common.types import NDA
 
 
 class Controller:
@@ -99,7 +100,7 @@ class Controller:
         return self._u
 
     @property
-    def state_estimate(self) -> npt.NDArray[np.float64]:
+    def state_estimate(self) -> NDA:
         """Controller's current state estimate."""
         if self.ball_removed:
             self._z = np.zeros(4)
@@ -237,7 +238,7 @@ class MPCController(Controller):
         xmax: float,
         umin: float,
         umax: float,
-    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    ) -> tuple[NDA, NDA]:
         """Make the bound constraints for the optimal control problem."""
         # Input and state constraints
         # Equality constraints
@@ -253,7 +254,7 @@ class MPCController(Controller):
         upper_bounds = np.hstack([upper_equality_bounds, upper_inequality_bounds])
         return lower_bounds, upper_bounds
 
-    def mpc_control(self, x0: npt.NDArray[np.float64]) -> float:
+    def mpc_control(self, x0: NDA) -> float:
         """Solve optimal control problem and return the first control action."""
         # Update initial state
         nx = self.nx

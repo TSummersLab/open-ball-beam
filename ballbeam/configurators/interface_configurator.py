@@ -1,3 +1,5 @@
+"""Configurator for interface."""
+
 from ballbeam.configurators.configurators import Configurator
 
 

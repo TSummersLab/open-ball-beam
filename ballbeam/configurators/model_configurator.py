@@ -1,3 +1,5 @@
+"""Configurator for simulation model."""
+
 from ballbeam.configurators.configurators import Configurator
 
 

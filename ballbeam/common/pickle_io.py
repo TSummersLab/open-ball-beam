@@ -19,13 +19,12 @@ def pickle_import(path: Path | str) -> Any:
     -------
     Any: The data loaded from the pickle file.
     """
-    if isinstance(path, str):
-        path = Path(path)
+    path = Path(path)
     with path.open("rb") as file:
         return pickle.load(file)
 
 
-def pickle_export(dirname_out: str, filename_out: str, data: Any) -> None:
+def pickle_export(dirname_out: Path | str, filename_out: str, data: Any) -> None:
     """Export data to a pickle file.
 
     Args:

@@ -1,15 +1,21 @@
+"""Configurator for hardware."""
+
 from ballbeam.configurators.configurators import Configurator
 
 
-def make_hardware_configurator():
+def make_hardware_configurator(*, collect_from_user_input: bool = False) -> Configurator:
+    """Make a configurator for hardware."""
     name = "hardware"
     description = "Hardware settings"
 
     # Arduino configuration
 
     # Communications
-    PORT = "COM5"
-    # PORT = "COM"+input("Enter a COM port number:\n")
+    if collect_from_user_input:
+        com_port_number = input("Enter a COM port number:\n")
+        PORT = f"COM{com_port_number}"
+    else:
+        PORT = "COM5"
 
     BAUD_RATE = 115200
 
@@ -42,15 +48,21 @@ def make_hardware_configurator():
     beam_data = {"ANGLE": {"MIN": BEAM_ANGLE_MIN, "MAX": BEAM_ANGLE_MAX}, "ANGLE_SCALE": BEAM_ANGLE_SCALE}
 
     # Sensor configuration
-    DISTANCE_MID = 105  # midpoint of beam rails, in millimeters (250mm rails, each end embedded in 20mm deep rail holders, leaving 210mm exposed, so midpoint is 210mm/2 = 105mm)
-    DISTANCE_BACKSTOP = 90  # max distance from midpoint, in millimeters
-    DISTANCE_BACKSTOP_MM = 0.001 * DISTANCE_BACKSTOP
+
+    # Midpoint of beam rails, in millimeters
+    # - 250mm rails, each end embedded in 20mm deep rail holders
+    # - Leaves 210mm exposed
+    # - So midpoint is 210mm/2 = 105mm
+    DISTANCE_MID = 105
+    # Max distance from midpoint, first in millimeters, then converted to meters
+    DISTANCE_BACKSTOP = 90
+    DISTANCE_BACKSTOP_M = 0.001 * DISTANCE_BACKSTOP
 
     READING_SCALE = 0.01
     OBSERVATION_SCALE = 0.01
 
     sensor_data = {
-        "DISTANCE": {"MID": DISTANCE_MID, "BACKSTOP": DISTANCE_BACKSTOP, "BACKSTOP_MM": DISTANCE_BACKSTOP_MM},
+        "DISTANCE": {"MID": DISTANCE_MID, "BACKSTOP": DISTANCE_BACKSTOP, "BACKSTOP_MM": DISTANCE_BACKSTOP_M},
         "READING_SCALE": READING_SCALE,
         "OBSERVATION_SCALE": OBSERVATION_SCALE,
     }
