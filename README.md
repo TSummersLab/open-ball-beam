@@ -170,6 +170,8 @@ pip install -r requirements.txt
 
 to update your virtual environment with the packages.
 
+If necessary, also add the type hints package to the `additional_dependencies` for `mypy` in [`.pre-commit-config.yaml`](.pre-commit-config.yaml) so that `mypy` knows about the type hints (often required for less popular packages).
+
 ### General setup (cross-platform Arduino <--> Python)
 
 1. Baud rate
