@@ -36,6 +36,7 @@ repos:
             types-keyboard,
             types-pyserial,
             pandas-stubs,
+            PyQt5-stubs,
           ]
         args: [--disallow-untyped-defs, --disallow-untyped-calls]
         files: ^ballbeam/
