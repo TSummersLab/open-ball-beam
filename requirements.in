@@ -23,6 +23,7 @@ setuptools==65.5.0
 wheel==0.38.4
 pygit2
 ipykernel
+nbformat
 pre-commit
 black
 ruff

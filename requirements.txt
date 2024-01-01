@@ -6,6 +6,10 @@
 #
 asttokens==2.4.1
     # via stack-data
+attrs==23.2.0
+    # via
+    #   jsonschema
+    #   referencing
 black==23.12.1
     # via -r requirements.in
 build==1.0.3
@@ -41,6 +45,8 @@ distlib==0.3.8
     # via virtualenv
 executing==2.0.1
     # via stack-data
+fastjsonschema==2.19.1
+    # via nbformat
 filelock==3.13.1
     # via virtualenv
 fonttools==4.47.0
@@ -55,12 +61,17 @@ ipython==8.19.0
     # via ipykernel
 jedi==0.19.1
     # via ipython
+jsonschema==4.20.0
+    # via nbformat
+jsonschema-specifications==2023.12.1
+    # via jsonschema
 jupyter-client==8.6.0
     # via ipykernel
 jupyter-core==5.5.1
     # via
     #   ipykernel
     #   jupyter-client
+    #   nbformat
 keyboard==0.13.5
     # via -r requirements.in
 kiwisolver==1.4.5
@@ -77,6 +88,8 @@ mypy-extensions==1.0.0
     # via
     #   black
     #   mypy
+nbformat==5.9.2
+    # via -r requirements.in
 nest-asyncio==1.5.8
     # via ipykernel
 nodeenv==1.8.0
@@ -165,6 +178,14 @@ pyzmq==25.1.2
     #   jupyter-client
 qdldl==0.1.7.post0
     # via osqp
+referencing==0.32.0
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
+rpds-py==0.16.2
+    # via
+    #   jsonschema
+    #   referencing
 ruamel-yaml==0.17.40
     # via -r requirements.in
 ruamel-yaml-clib==0.2.8
@@ -196,6 +217,7 @@ traitlets==5.14.0
     #   jupyter-client
     #   jupyter-core
     #   matplotlib-inline
+    #   nbformat
 typing-extensions==4.9.0
     # via mypy
 tzdata==2023.4
