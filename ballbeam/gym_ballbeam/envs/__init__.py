@@ -1,1 +1,1 @@
-"""Open Ball & Beam Gym Enviornments."""
+"""Open Ball & Beam gym Environments."""

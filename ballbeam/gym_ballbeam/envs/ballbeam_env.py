@@ -1,9 +1,15 @@
-import math
+"""Open Ball & Beam gym environment."""
 
-import gym
+from __future__ import annotations
+
+import math
+from typing import Any, ClassVar
+
+import gym  # type: ignore[import]
 import numpy as np
-from gym import logger, spaces
-from gym.utils import seeding
+from gym import logger, spaces  # type: ignore[import]
+from gym.envs.classic_control import rendering  # type: ignore[import]
+from gym.utils import seeding  # type: ignore[import]
 
 from ballbeam.common.colors import Monokai
 from ballbeam.common.cost import Cost
@@ -14,40 +20,45 @@ from ballbeam.configurators.configs import CONFIG
 
 
 class BallBeamEnv(gym.Env):
-    metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
+    """Open Ball & Beam gym base environment."""
 
-    def __init__(self, max_episode_length=200, hardware=False, seed=None) -> None:
+    metadata: ClassVar[dict[str, Any]] = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
+
+    def __init__(self, max_episode_length: int = 200, *, use_hardware: bool = False, seed: int | None = None) -> None:
+        """Initialize."""
         self.seed(seed)
-        self.viewer = None
+        self.viewer: rendering.Viewer | None = None
         self.umin = CONFIG.hardware.BEAM.ANGLE.MIN * CONFIG.constants.DEG2RAD
         self.umax = CONFIG.hardware.BEAM.ANGLE.MAX * CONFIG.constants.DEG2RAD
         self.action_space = None
-        # VMAX = (YMAX-YMIN)/CONFIG.hardware.COMM.DT
-        # VMIN = -VMAX
-        # obs_lo, obs_hi = np.array([YMIN, VMIN], dtype=np.float32), np.array([YMAX, VMAX], dtype=np.float32)
         obs_lo, obs_hi = np.array(YMIN, dtype=np.float32), np.array(YMAX, dtype=np.float32)
         self.observation_space = spaces.Box(obs_lo, obs_hi, dtype=np.float32)
         self.max_episode_length = max_episode_length
-        if hardware:
-            self.system = Hardware()
-        else:
-            self.system = Simulator()
-            # self.system = Simulator(process_noise_scale=0.1, sensor_noise_scale=0.1)
+        self.system: Hardware | Simulator = Hardware() if use_hardware else Simulator()
         self.reference = ConstantReference()
         self.cost = Cost()
+
+        self.setpoint: float = 0.0
+        self.steps_beyond_done: int | None = None
+
         self.reset()
 
-    def seed(self, seed=None):
+    def seed(self, seed: int | None = None) -> list[int | None]:
+        """Seed the environment."""
         self.np_random, _seed = seeding.np_random(seed)
-        np.random.seed(seed)
+        # TODO(bgravell): NPY002 Replace legacy `np.random.seed` call with `np.random.Generator`  # noqa: TD003, FIX002
+        np.random.seed(seed)  # noqa: NPY002
         return [seed]
 
-    def action2theta(self, action) -> None:
+    def action2theta(self, action: Any) -> float:
+        """Convert action to beam angle theta."""
         raise NotImplementedError
 
-    def step(self, action):
-        # This function mirrors update() in interface.py
+    def step(self, action: Any) -> tuple[float, float, bool, dict[str, Any]]:
+        """Take a single step in the environment.
 
+        This function mirrors ballbeam.common.interface.update()
+        """
         theta = self.action2theta(action)
         theta = np.clip(theta, self.umin, self.umax)
         self.theta = theta
@@ -58,16 +69,6 @@ class BallBeamEnv(gym.Env):
         # Get the current setpoint from the reference
         self.setpoint = self.reference.setpoint(self.t)
 
-        # # Update the controller with latest information
-        # controller.update_aux(saturated=self.system.saturated, ball_removed=self.system.ball_removed)
-        # controller.update(observation, setpoint, self.t)
-
-        # # Get the control action from the controller based on latest information
-        # action = controller.action
-
-        # # Get the current estimate of the state from the controller
-        # state_estimate = controller.state_estimate
-
         # Get the current cost of the observation and theta
         cost_dict = self.cost.take(self.observation, theta)
         reward = -cost_dict["c"]
@@ -75,9 +76,8 @@ class BallBeamEnv(gym.Env):
         # Evolve the system forward by one step
         self.system.process(theta)
 
-        # done = bool(not XMIN+0.010 < self.observation < XMAX-0.010)  # use 0.99 fudge factor so simulator doesnt have to be altered
+        # Set the done status
         done = bool(self.t + 1 >= self.max_episode_length)
-        # done = False  # never terminate early
 
         # Increment the time index
         self.t += 1
@@ -98,15 +98,14 @@ class BallBeamEnv(gym.Env):
             self.steps_beyond_done += 1
             reward = 0.0
 
-        info = {}
+        info: dict[str, Any] = {}
 
         return self.observation, reward, done, info
 
-    def reset(self, pos0=None):
+    def reset(self, pos0: float | None = None) -> float:
+        """Reset the environment."""
         if pos0 is None:
-            # pos0 = self.np_random.uniform(XMIN+0.020, XMAX-0.020)
-            # pos0 = self.np_random.choice([XMIN+0.020, XMIN+0.040, XMAX-0.040, XMAX-0.020])
-            pos0 = XMIN + 0.020
+            pos0 = self.np_random.uniform(XMIN + 0.020, XMAX - 0.020)
         self.system.reset(np.array([pos0, 0.0]))
         self.theta = 0.0
         self.t = 0
@@ -116,7 +115,8 @@ class BallBeamEnv(gym.Env):
         self.steps_beyond_done = None
         return self.observation
 
-    def render(self, mode="human"):
+    def render(self, mode: str = "human") -> Any:  # noqa: PLR0915
+        """Render the environment."""
         screen_width = 600
         screen_height = 200
 
@@ -130,14 +130,12 @@ class BallBeamEnv(gym.Env):
         axlerad = beamthick
 
         if self.viewer is None:
-            from gym.envs.classic_control import rendering
-
             self.viewer = rendering.Viewer(screen_width, screen_height)
 
             # Background
             color = tuple(val / 255 for val in Monokai.k)
-            l, r, t, b = 0, screen_width, screen_height, 0
-            bkgd = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
+            left, right, top, bottom = 0.0, float(screen_width), float(screen_height), 0.0
+            bkgd = rendering.FilledPolygon([(left, bottom), (left, top), (right, top), (right, bottom)])
             bkgd.set_color(*color)
             self.viewer.add_geom(bkgd)
 
@@ -145,8 +143,8 @@ class BallBeamEnv(gym.Env):
             self.axletrans.set_translation(axlex, axley)
 
             # Add the beam
-            l, r, t, b = -beamlength / 2, beamlength / 2, beamthick / 2, -beamthick / 2
-            self.beam = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
+            left, right, top, bottom = -beamlength / 2, beamlength / 2, beamthick / 2, -beamthick / 2
+            self.beam = rendering.FilledPolygon([(left, bottom), (left, top), (right, top), (right, bottom)])
             color = tuple(val / 255 for val in Monokai.b)
             self.beam.set_color(*color)
             self.beamtrans = rendering.Transform()
@@ -205,6 +203,7 @@ class BallBeamEnv(gym.Env):
         return self.viewer.render(return_rgb_array=return_rgb_array)
 
     def close(self) -> None:
+        """Close the environment."""
         if self.viewer:
             self.viewer.close()
             self.viewer = None
@@ -212,32 +211,46 @@ class BallBeamEnv(gym.Env):
 
 
 class BallBeamContinuousEnv(BallBeamEnv):
-    def __init__(self, **kwargs) -> None:
+    """Open Ball & Beam gym environment with a continuous action space."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize."""
         super().__init__(**kwargs)
         self.action_space = spaces.Box(self.umin, self.umax, shape=(1,), dtype=np.float32)
 
-    def action2theta(self, action):
+    def action2theta(self, action: float) -> float:
+        """Convert action to beam angle theta."""
         return action
 
 
 class BallBeamDiscreteEnv(BallBeamEnv):
-    def __init__(self, **kwargs) -> None:
+    """Open Ball & Beam gym environment with a discrete action space.
+
+    The discrete action space accepts the following values:
+    0: Negative beam angle.
+    1: Zero beam angle.
+    2: Positive beam amgle.
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize."""
         super().__init__(**kwargs)
         self.action_space = spaces.Discrete(3)
+        self.action_map = {
+            0: 3 * CONFIG.constants.DEG2RAD,
+            1: 0.0,
+            2: -3 * CONFIG.constants.DEG2RAD,
+        }
 
-    def action2theta(self, action):
-        if action == 2:
-            return 3 * CONFIG.constants.DEG2RAD
-        elif action == 0:
-            return -3 * CONFIG.constants.DEG2RAD
-        else:
-            return 0.0
+    def action2theta(self, action: int) -> float:
+        """Convert action to beam angle theta."""
+        return self.action_map[action]
 
 
 if __name__ == "__main__":
     from time import time
 
-    from ballbeam.common.interface import choose_controller
+    from ballbeam.common.interface import CONTROLLER_CLASS_MAP, instantiate_object_by_class_name
 
     use_discrete_env = False
     use_hardware = False
@@ -246,22 +259,18 @@ if __name__ == "__main__":
 
     # Instantiate the Gym environment
     Env = BallBeamDiscreteEnv if use_discrete_env else BallBeamContinuousEnv
-    env = Env(hardware=use_hardware, max_episode_length=max_episode_length)
-    env.seed(seed)  # TODO harmonize random seeding of the simulator in simulator.py and Gym
+    env = Env(use_hardware=use_hardware, max_episode_length=max_episode_length)
+    env.seed(seed)
+    # TOD(bgravell): harmonize random seeding of the simulator in simulator.py and Gym
 
-    # Choose controller
-    # controller_type = 'Null'
-    # controller_type = 'Sine'
-    # controller_type = 'PID'
-    controller_type = "LQG"
-    # controller_type = 'MPC'
-    controller = choose_controller(controller_type)
+    # Instantiate controller
+    controller = instantiate_object_by_class_name(CONFIG.interface.controller_type, CONTROLLER_CLASS_MAP)
 
     # Initialize
     action = 0
     time_elapsed = 0
     time_last = time()
-    reward_tot = 0
+    reward_tot = 0.0
     observation = env.reset()
 
     # Run an episode
@@ -277,7 +286,8 @@ if __name__ == "__main__":
         cont_action = controller.action
 
         if use_discrete_env:
-            if np.abs(cont_action) > 0.02:  # Only act if the requested cont_action is large
+            # Only act if the requested cont_action is large
+            if np.abs(cont_action) > 0.02:  # noqa: SIM108, PLR2004
                 action = int(np.sign(cont_action) + 1)
             else:
                 action = 1

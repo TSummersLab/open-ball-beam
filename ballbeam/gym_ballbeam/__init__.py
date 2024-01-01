@@ -1,6 +1,8 @@
+"""Open Ball & Beam gym integration."""
+
 import logging
 
-from gym.envs.registration import register
+from gym.envs.registration import register  # type: ignore[import-not-found]
 
 logger = logging.getLogger(__name__)
 
