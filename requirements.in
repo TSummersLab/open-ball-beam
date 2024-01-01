@@ -8,6 +8,12 @@ keyboard
 ruamel.yaml<0.18.0
 osqp
 cmake  # required for osqp codegen
+gym==0.21.0
+# Need to pin setuptools and wheel for successful gym setup
+# See https://github.com/freqtrade/freqtrade/issues/8376#issuecomment-1519257211
+# See https://stackoverflow.com/a/76286033
+setuptools==65.5.0
+wheel==0.38.4
 pygit2
 pre-commit
 black

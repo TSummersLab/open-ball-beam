@@ -16,6 +16,8 @@ click==8.1.7
     # via
     #   black
     #   pip-tools
+cloudpickle==3.0.0
+    # via gym
 cmake==3.28.1
     # via -r requirements.in
 colorama==0.4.6
@@ -32,6 +34,8 @@ filelock==3.13.1
     # via virtualenv
 fonttools==4.47.0
     # via matplotlib
+gym==0.21.0
+    # via -r requirements.in
 identify==2.5.33
     # via pre-commit
 keyboard==0.13.5
@@ -52,6 +56,7 @@ numpy==1.26.2
     # via
     #   -r requirements.in
     #   contourpy
+    #   gym
     #   matplotlib
     #   osqp
     #   pyqtgraph
@@ -117,8 +122,10 @@ typing-extensions==4.9.0
     # via mypy
 virtualenv==20.25.0
     # via pre-commit
-wheel==0.42.0
-    # via pip-tools
+wheel==0.38.4
+    # via
+    #   -r requirements.in
+    #   pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
