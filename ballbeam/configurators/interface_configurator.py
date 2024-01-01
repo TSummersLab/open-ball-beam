@@ -3,23 +3,34 @@
 from ballbeam.configurators.configurators import Configurator
 
 
-def make_interface_configurator():
+def make_interface_configurator() -> Configurator:
+    """Make a configurator for the interface.
+
+    system_type can be one of:
+    "Simulator"
+    "Hardware"
+
+    controller_type can be one of:
+    "Null"
+    "Sine"
+    "PID"
+    "LQG"
+    "MPC"
+
+    reference_type can be one of:
+    "Constant"
+    "SlowSine"
+    "FastSquare"
+
+    cost_type can be one of:
+    "Default"
+    """
     name = "interface"
     description = "Interface settings"
 
-    # system_type = "Simulator"
     system_type = "Hardware"
-
-    # controller_type = "Null"
-    # controller_type = "Sine"
-    # controller_type = "PID"
     controller_type = "LQG"
-    # controller_type = "MPC"
-
-    # reference_type = "Constant"
-    # reference_type = "SlowSine"
     reference_type = "FastSquare"
-
     cost_type = "Default"
 
     data = {

@@ -1,3 +1,9 @@
+"""Servo calibration."""
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -6,19 +12,24 @@ from ballbeam.common.utility import print_arduino_vector
 from ballbeam.configurators.configurators import Configurator
 from ballbeam.static import CALIBRATION_PATH
 
+if TYPE_CHECKING:
+    from ballbeam.common.types import NDA
 
-def get_servo_and_imu_data(filename):
-    servo_outs = []
-    raw_accels = []
-    accel = []
 
-    with open(filename) as file:
+def get_servo_and_imu_data(filename: Path | str) -> tuple[NDA, NDA]:
+    """Get servo and IMU data."""
+    servo_outs: list[int] = []
+    raw_accels: list[list[list[float]]] = []
+    accel: list[list[float]] = []
+
+    path = Path(filename)
+    with path.open("r") as file:
         collect_flag = False
         for line in file:
             if "BEGIN DATA COLLECTION" in line:
                 collect_flag = True
                 continue
-            elif "END DATA COLLECTION" in line:
+            if "END DATA COLLECTION" in line:
                 collect_flag = False
                 continue
 
@@ -31,37 +42,39 @@ def get_servo_and_imu_data(filename):
                     else:
                         raw_accels.append(accel)
                         accel = []
-                elif len(words) == 3:
+                elif len(words) == 3:  # noqa: PLR2004
                     accel.append([float(word) for word in words])
 
-    servo_outs = np.array(servo_outs)
-    raw_accels = np.array(raw_accels)
-    accels = np.array([clipped_mean_rows(raw_accel.T) for raw_accel in raw_accels])
-    return servo_outs, accels
+    servo_outs_arr = np.array(servo_outs)
+    raw_accels_arr = np.array(raw_accels)
+    accels_arr = np.array([clipped_mean_rows(raw_accel.T) for raw_accel in raw_accels_arr])
+    return servo_outs_arr, accels_arr
 
 
-def make_servo_calibration_configurator(
-    constants_configurator,
-    hardware_configurator,
-    show_print_arduino=False,
-    show_plot=False,
-):
+def make_servo_calibration_configurator(  # noqa: PLR0915
+    constants_configurator: Configurator,
+    hardware_configurator: Configurator,
+    *,
+    show_print_arduino: bool = False,
+    show_plot: bool = False,
+) -> Configurator:
+    """Make a servo calibration configurator."""
     constants_config = constants_configurator.data_obj
     hardware_config = hardware_configurator.data_obj
 
     # Import servo calibration data
     servo_calibration_data_path = CALIBRATION_PATH.joinpath("servo_calibration_data.txt")
     servo_outs, accels = get_servo_and_imu_data(servo_calibration_data_path)
-    mid_idx = np.where(servo_outs == hardware_config.SERVO.CMD.MID)[0][0]
+    mid_idx = np.where(servo_outs == hardware_config.SERVO.CMD.MID)[0][0]  # type: ignore[attr-defined]
     accel_offset = accels[mid_idx]
     delta_accels = accels - accel_offset
-    delta_servo_outs = servo_outs - hardware_config.SERVO.CMD.MID
+    delta_servo_outs = servo_outs - hardware_config.SERVO.CMD.MID  # type: ignore[attr-defined]
 
     # Angles are determined solely from the z-component of the accelerometer readings
-    angles = -np.arcsin(delta_accels[:, 2] / constants_config.STD_GRAVITY_ACCEL)
+    angles = -np.arcsin(delta_accels[:, 2] / constants_config.STD_GRAVITY_ACCEL)  # type: ignore[attr-defined]
 
-    x = angles * hardware_config.BEAM.ANGLE_SCALE
-    y = delta_servo_outs * hardware_config.SERVO.PWM_SCALE
+    x = angles * hardware_config.BEAM.ANGLE_SCALE  # type: ignore[attr-defined]
+    y = delta_servo_outs * hardware_config.SERVO.PWM_SCALE  # type: ignore[attr-defined]
 
     # Choose the polynomial powers to use in the least-squares regression
     powers = [5, 4, 3, 2, 1]
@@ -81,8 +94,8 @@ def make_servo_calibration_configurator(
     if show_plot:
         # Plotting for sanity check
         poly = np.poly1d(coefficients)
-        xmin = -8 * constants_config.DEG2RAD * hardware_config.BEAM.ANGLE_SCALE
-        xmax = 4 * constants_config.DEG2RAD * hardware_config.BEAM.ANGLE_SCALE
+        xmin = -8 * constants_config.DEG2RAD * hardware_config.BEAM.ANGLE_SCALE  # type: ignore[attr-defined]
+        xmax = 4 * constants_config.DEG2RAD * hardware_config.BEAM.ANGLE_SCALE  # type: ignore[attr-defined]
 
         plt.figure()
         plt.scatter(x, y, c="b", label="true", zorder=10)
@@ -93,7 +106,7 @@ def make_servo_calibration_configurator(
         plt.ylabel("Servo pwm (microseconds) (scaled)")
         plt.legend()
 
-        handles, labels = plt.gca().get_legend_handles_labels()
+        handles, labels = plt.gca().get_legend_handles_labels()  # type: ignore[no-untyped-call]
         order = [1, 2, 0]
         plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
 
@@ -109,10 +122,10 @@ def make_servo_calibration_configurator(
         plt.ylabel("Servo pwm error (microseconds) (scaled)")
         plt.legend()
 
-        handles, labels = plt.gca().get_legend_handles_labels()
+        handles, labels = plt.gca().get_legend_handles_labels()  # type: ignore[no-untyped-call]
         order = [1, 2, 0]
         plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
-        plt.show()
+        plt.show()  # type: ignore[no-untyped-call]
 
     name = "servo_calibration"
     data = {"coefficients": sparse_coefficients, "powers": powers}

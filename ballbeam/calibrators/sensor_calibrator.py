@@ -1,3 +1,9 @@
+"""Sensor calibration."""
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -6,21 +12,24 @@ from ballbeam.common.utility import print_arduino_vector
 from ballbeam.configurators.configurators import Configurator
 from ballbeam.static import CALIBRATION_PATH
 
+if TYPE_CHECKING:
+    from ballbeam.common.types import NDA
 
-def get_distance_and_sensor_data(filename):
-    distances = []
-    raw_readings = []
-    reading = []
 
-    with open(filename) as file:
+def get_distance_and_sensor_data(filename: Path | str) -> tuple[NDA, NDA, NDA]:
+    """Get distance and sensor data from a file."""
+    distances: list[int] = []
+    raw_readings: list[list[float]] = []
+    reading: list[float] = []
+
+    path = Path(filename)
+    with path.open("r") as file:
         collect_flag = False
         for line in file:
-            # print(line, end='')
-
             if "BEGIN DATA COLLECTION" in line:
                 collect_flag = True
                 continue
-            elif "END DATA COLLECTION" in line:
+            if "END DATA COLLECTION" in line:
                 collect_flag = False
                 continue
 
@@ -37,32 +46,33 @@ def get_distance_and_sensor_data(filename):
                 else:
                     reading.append(float(first_word))
 
-    distances = np.array(distances)
-    raw_readings = np.array(raw_readings)
-    readings = clipped_mean_rows(raw_readings)
-    return distances, readings, raw_readings
+    distances_arr = np.array(distances)
+    raw_readings_arr = np.array(raw_readings)
+    readings_arr = clipped_mean_rows(raw_readings_arr)
+    return distances_arr, readings_arr, raw_readings_arr
 
 
 def make_sensor_calibration_configurator(
-    constants_configurator,
-    hardware_configurator,
-    show_print_arduino=False,
-    show_plot=False,
-):
+    hardware_configurator: Configurator,
+    *,
+    show_print_arduino: bool = False,
+    show_plot: bool = False,
+) -> Configurator:
+    """Make a sensor calibration configurator."""
     hardware_config = hardware_configurator.data_obj
 
     # Import sensor calibration data
     sensor_calibration_data_path = CALIBRATION_PATH.joinpath("sensor_calibration_data.txt")
     distances, readings, raw_readings = get_distance_and_sensor_data(sensor_calibration_data_path)
-    mid_idx = np.where(distances == hardware_config.SENSOR.DISTANCE.MID)[0][0]
+    mid_idx = np.where(distances == hardware_config.SENSOR.DISTANCE.MID)[0][0]  # type: ignore[attr-defined]
     READING_OFFSET = float(readings[mid_idx])
     delta_readings = readings - READING_OFFSET
     delta_raw_readings = raw_readings - READING_OFFSET
-    delta_distances = distances - hardware_config.SENSOR.DISTANCE.MID
+    delta_distances = distances - hardware_config.SENSOR.DISTANCE.MID  # type: ignore[attr-defined]
 
-    x = delta_readings * hardware_config.SENSOR.READING_SCALE
-    xs = delta_raw_readings * hardware_config.SENSOR.READING_SCALE
-    y = delta_distances * hardware_config.SENSOR.OBSERVATION_SCALE
+    x = delta_readings * hardware_config.SENSOR.READING_SCALE  # type: ignore[attr-defined]
+    xs = delta_raw_readings * hardware_config.SENSOR.READING_SCALE  # type: ignore[attr-defined]
+    y = delta_distances * hardware_config.SENSOR.OBSERVATION_SCALE  # type: ignore[attr-defined]
 
     # Choose the polynomial powers to use in the least-squares regression
     powers = [5, 4, 3, 2, 1]
@@ -82,7 +92,7 @@ def make_sensor_calibration_configurator(
     if show_plot:
         # Plotting for sanity check
         poly = np.poly1d(coefficients)
-        xmin, xmax = -150 * hardware_config.SENSOR.READING_SCALE, 150 * hardware_config.SENSOR.READING_SCALE
+        xmin, xmax = -150 * hardware_config.SENSOR.READING_SCALE, 150 * hardware_config.SENSOR.READING_SCALE  # type: ignore[attr-defined]
 
         # Curve plot
         plt.figure()
@@ -97,7 +107,7 @@ def make_sensor_calibration_configurator(
         plt.ylabel("Delta distance (mm) (scaled)")
         plt.legend()
 
-        handles, labels = plt.gca().get_legend_handles_labels()
+        handles, labels = plt.gca().get_legend_handles_labels()  # type: ignore[no-untyped-call]
         order = [1, 2, 0]
         plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
 
@@ -113,10 +123,10 @@ def make_sensor_calibration_configurator(
         plt.ylabel("Delta distance error (mm) (scaled)")
         plt.legend()
 
-        handles, labels = plt.gca().get_legend_handles_labels()
+        handles, labels = plt.gca().get_legend_handles_labels()  # type: ignore[no-untyped-call]
         order = [1, 2, 0]
         plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
-        plt.show()
+        plt.show()  # type: ignore[no-untyped-call]
 
     name = "sensor_calibration"
     data = {"coefficients": sparse_coefficients, "powers": powers, "READING_OFFSET": READING_OFFSET}
@@ -125,16 +135,11 @@ def make_sensor_calibration_configurator(
 
 
 if __name__ == "__main__":
-    plt.close("all")
-
-    from ballbeam.configurators.constants_configurator import make_constants_configurator
     from ballbeam.configurators.hardware_configurator import make_hardware_configurator
 
-    constants_configurator = make_constants_configurator()
     hardware_configurator = make_hardware_configurator()
 
     make_sensor_calibration_configurator(
-        constants_configurator,
         hardware_configurator,
         show_print_arduino=True,
         show_plot=True,

@@ -176,7 +176,7 @@ def update_displayed_data(data: Data) -> None:
     """Update the displayed data."""
     update_print(data)
 
-    if CONFIG.plot.SHOW_KEYS is not None:
+    if CONFIG.plot.SHOW_KEYS:
         # TODO(bgravell): get rid of globals  # noqa: TD003, FIX002
         global plot_data_dict  # noqa: PLW0602
         update_plot_data(plot_data_dict, data)
@@ -278,15 +278,7 @@ if __name__ == "__main__":
     header_str = spacer.join(strings)
     print(header_str)
 
-    if CONFIG.plot.SHOW_KEYS is None:
-        while True:
-            # TODO(bgravell): make data history logging independent of plotting, and pass history data to realtime plotter  # noqa: FIX002, TD003, E501
-            # TODO(bgravell): add option to save history data  # noqa: FIX002, TD003
-            update()
-            if keyboard.is_pressed("enter"):
-                break
-        system.shutdown()
-    else:
+    if CONFIG.plot.SHOW_KEYS:
         # enable antialiasing to get rid of jaggies, turn off to save render time
         pg.setConfigOptions(antialias=CONFIG.plot.ANTIALIAS)
         pg.setConfigOption("background", Monokai.k)
@@ -310,4 +302,12 @@ if __name__ == "__main__":
             app = QtWidgets.QApplication(sys.argv)
             app.instance().exec_()
 
+        system.shutdown()
+    else:
+        while True:
+            # TODO(bgravell): make data history logging independent of plotting, and pass history data to realtime plotter  # noqa: FIX002, TD003, E501
+            # TODO(bgravell): add option to save history data  # noqa: FIX002, TD003
+            update()
+            if keyboard.is_pressed("enter"):
+                break
         system.shutdown()

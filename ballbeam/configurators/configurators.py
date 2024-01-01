@@ -66,10 +66,7 @@ def configure_calibrate_all(*, skip_mpc_setup: bool = True) -> None:
     plot_configurator = make_plot_configurator(hardware_configurator)
 
     servo_calibration_configurator = make_servo_calibration_configurator(constants_configurator, hardware_configurator)
-    sensor_calibration_configurator = make_sensor_calibration_configurator(
-        constants_configurator,
-        hardware_configurator,
-    )
+    sensor_calibration_configurator = make_sensor_calibration_configurator(hardware_configurator)
 
     configurators = [
         constants_configurator,
