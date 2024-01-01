@@ -20,6 +20,7 @@ pyglet==1.5.27
 setuptools==65.5.0
 wheel==0.38.4
 pygit2
+ipykernel
 pre-commit
 black
 ruff
