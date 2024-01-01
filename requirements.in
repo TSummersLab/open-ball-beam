@@ -7,8 +7,13 @@ pyserial
 keyboard
 ruamel.yaml<0.18.0
 osqp
-cmake  # required for osqp codegen
+# cmake is required for osqp codegen
+cmake  
 gym==0.21.0
+# pyglet is required for gym env rendering
+# Need to pin pyglet to latest version that works with gym 0.21.0
+# See https://stackoverflow.com/a/74324578
+pyglet==1.5.27
 # Need to pin setuptools and wheel for successful gym setup
 # See https://github.com/freqtrade/freqtrade/issues/8376#issuecomment-1519257211
 # See https://stackoverflow.com/a/76286033

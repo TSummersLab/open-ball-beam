@@ -85,6 +85,8 @@ pycparser==2.21
     # via cffi
 pygit2==1.13.3
     # via -r requirements.in
+pyglet==1.5.27
+    # via -r requirements.in
 pyparsing==3.1.1
     # via matplotlib
 pyproject-hooks==1.0.0
