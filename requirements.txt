@@ -88,6 +88,7 @@ numpy==1.26.2
     #   gym
     #   matplotlib
     #   osqp
+    #   pandas
     #   pyqtgraph
     #   qdldl
     #   scipy
@@ -99,6 +100,9 @@ packaging==23.2
     #   build
     #   ipykernel
     #   matplotlib
+    #   plotly
+pandas==2.1.4
+    # via -r requirements.in
 parso==0.8.3
     # via jedi
 pathspec==0.12.1
@@ -112,6 +116,8 @@ platformdirs==4.1.0
     #   black
     #   jupyter-core
     #   virtualenv
+plotly==5.18.0
+    # via -r requirements.in
 pre-commit==3.6.0
     # via -r requirements.in
 prompt-toolkit==3.0.43
@@ -146,6 +152,9 @@ python-dateutil==2.8.2
     # via
     #   jupyter-client
     #   matplotlib
+    #   pandas
+pytz==2023.3.post1
+    # via pandas
 pywin32==306
     # via jupyter-core
 pyyaml==6.0.1
@@ -173,6 +182,8 @@ six==1.16.0
     #   python-dateutil
 stack-data==0.6.3
     # via ipython
+tenacity==8.2.3
+    # via plotly
 tornado==6.4
     # via
     #   ipykernel
@@ -187,6 +198,8 @@ traitlets==5.14.0
     #   matplotlib-inline
 typing-extensions==4.9.0
     # via mypy
+tzdata==2023.4
+    # via pandas
 virtualenv==20.25.0
     # via pre-commit
 wcwidth==0.2.12
