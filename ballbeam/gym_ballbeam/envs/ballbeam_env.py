@@ -14,7 +14,7 @@ from gym.utils import seeding  # type: ignore[import]
 from ballbeam.common.colors import Monokai
 from ballbeam.common.cost import Cost
 from ballbeam.common.hardware import Hardware
-from ballbeam.common.reference import ConstantReference
+from ballbeam.common.interface import REFERENCE_CLASS_MAP, instantiate_object_by_class_name
 from ballbeam.common.simulator import XMAX, XMIN, YMAX, YMIN, Simulator
 from ballbeam.configurators.configs import CONFIG
 
@@ -24,7 +24,14 @@ class BallBeamEnv(gym.Env):
 
     metadata: ClassVar[dict[str, Any]] = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
 
-    def __init__(self, max_episode_length: int = 200, *, use_hardware: bool = False, seed: int | None = None) -> None:
+    def __init__(
+        self,
+        max_episode_length: int = 200,
+        reference_type: str = "Constant",
+        *,
+        use_hardware: bool = False,
+        seed: int | None = None,
+    ) -> None:
         """Initialize."""
         self.seed(seed)
         self.viewer: rendering.Viewer | None = None
@@ -34,8 +41,10 @@ class BallBeamEnv(gym.Env):
         obs_lo, obs_hi = np.array(YMIN, dtype=np.float32), np.array(YMAX, dtype=np.float32)
         self.observation_space = spaces.Box(obs_lo, obs_hi, dtype=np.float32)
         self.max_episode_length = max_episode_length
-        self.system: Hardware | Simulator = Hardware() if use_hardware else Simulator()
-        self.reference = ConstantReference()
+        self.system: Hardware | Simulator = (
+            Hardware() if use_hardware else Simulator(process_noise_scale=1.0, sensor_noise_scale=1.0)
+        )
+        self.reference = instantiate_object_by_class_name(reference_type, REFERENCE_CLASS_MAP)
         self.cost = Cost()
 
         self.setpoint: float = 0.0
@@ -182,7 +191,7 @@ class BallBeamEnv(gym.Env):
             return None
 
         # Dynamic updates
-        x = self.observation + self.setpoint
+        x = self.observation
         beamx = -math.cos(self.theta) * 0.5 * beamlength
         beamy = -math.sin(self.theta) * 0.5 * beamlength
 
@@ -250,7 +259,7 @@ class BallBeamDiscreteEnv(BallBeamEnv):
 if __name__ == "__main__":
     from time import time
 
-    from ballbeam.common.interface import CONTROLLER_CLASS_MAP, instantiate_object_by_class_name
+    from ballbeam.common.interface import CONTROLLER_CLASS_MAP
 
     use_discrete_env = False
     use_hardware = False
@@ -259,7 +268,11 @@ if __name__ == "__main__":
 
     # Instantiate the Gym environment
     Env = BallBeamDiscreteEnv if use_discrete_env else BallBeamContinuousEnv
-    env = Env(use_hardware=use_hardware, max_episode_length=max_episode_length)
+    env = Env(
+        reference_type="SlowSine",
+        use_hardware=use_hardware,
+        max_episode_length=max_episode_length,
+    )
     env.seed(seed)
     # TOD(bgravell): harmonize random seeding of the simulator in simulator.py and Gym
 
@@ -272,6 +285,11 @@ if __name__ == "__main__":
     time_last = time()
     reward_tot = 0.0
     observation = env.reset()
+
+    spacer = "    "
+    print(
+        f'{"time":12s}{spacer}{"observation":12s}{spacer}{"setpoint":12s}{spacer}{"reward":12s}{spacer}{"reward_tot":12s}{spacer}{"clock_dt":12s}{spacer}',
+    )
 
     # Run an episode
     for i in range(max_episode_length):
@@ -297,13 +315,11 @@ if __name__ == "__main__":
         observation, reward, done, info = env.step(action)
         reward_tot += reward
 
-        spacer = "    "
-        print(i + 1, end="    ")
-        print("%12.6f" % observation, end=spacer)
-        print("%12.6f" % reward, end=spacer)
-        print("%12.6f" % reward_tot, end=spacer)
-        print("%12.6f" % (time_now - time_last), end=spacer)
-        print("")
+        clock_dt = time_now - time_last
+
+        print(
+            f"{i+1:12d}{spacer}{observation:12.3f}{spacer}{env.setpoint:12.3f}{spacer}{reward:12.3f}{spacer}{reward_tot:12.3f}{spacer}{clock_dt:12.3f}",
+        )
 
         time_last = time_now
         if done:
