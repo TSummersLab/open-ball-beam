@@ -114,13 +114,13 @@ packaging==23.2
     #   ipykernel
     #   matplotlib
     #   plotly
-pandas==2.1.4
+pandas==2.0.3
     # via -r requirements.in
 parso==0.8.3
     # via jedi
 pathspec==0.12.1
     # via black
-pillow==10.1.0
+pillow==10.2.0
     # via matplotlib
 pip-tools==7.3.0
     # via -r requirements.in
