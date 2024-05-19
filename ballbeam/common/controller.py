@@ -9,12 +9,12 @@ import numpy as np
 from ballbeam.common.extramath import mix
 from ballbeam.common.pickle_io import pickle_import
 from ballbeam.configurators.configs import CONFIG
-from ballbeam.static import CONFIGURATION_PATH
+from ballbeam.paths import CONFIGURATION_PATH
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ballbeam.common.types import NDA
+    from ballbeam.common.type_defs import ArrF64
 
 
 class Controller:
@@ -100,7 +100,7 @@ class Controller:
         return self._u
 
     @property
-    def state_estimate(self) -> NDA:
+    def state_estimate(self) -> ArrF64:
         """Controller's current state estimate."""
         if self.ball_removed:
             self._z = np.zeros(4)
@@ -203,7 +203,7 @@ class MPCController(Controller):
         # to enable `import emosqp` to work
         import sys
 
-        from ballbeam.static import ROOT_PATH
+        from ballbeam.paths import ROOT_PATH
 
         sys.path.append(str(ROOT_PATH))
 
@@ -238,7 +238,7 @@ class MPCController(Controller):
         xmax: float,
         umin: float,
         umax: float,
-    ) -> tuple[NDA, NDA]:
+    ) -> tuple[ArrF64, ArrF64]:
         """Make the bound constraints for the optimal control problem."""
         # Input and state constraints
         # Equality constraints
@@ -254,7 +254,7 @@ class MPCController(Controller):
         upper_bounds = np.hstack([upper_equality_bounds, upper_inequality_bounds])
         return lower_bounds, upper_bounds
 
-    def mpc_control(self, x0: NDA) -> float:
+    def mpc_control(self, x0: ArrF64) -> float:
         """Solve optimal control problem and return the first control action."""
         # Update initial state
         nx = self.nx
@@ -286,3 +286,14 @@ class MPCController(Controller):
             du = 0.0
 
         self._u += du
+
+
+# Register all classes with this map
+# TODO(bgravell): Refactor to decorate each concrete class with this registration # noqa: TD003, FIX002
+CONTROLLER_CLASS_MAP = {
+    "Null": Controller,
+    "Sine": SineController,
+    "PID": PIDController,
+    "LQG": LQGController,
+    "MPC": MPCController,
+}

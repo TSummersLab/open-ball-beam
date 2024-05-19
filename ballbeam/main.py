@@ -1,18 +1,25 @@
-"""Main script for Open Ball & Beam.
+"""Main script for Open Ball & Beam."""
 
-This script calls the configurators as well as the Python interface.
+import argparse
 
-Use this instead of running interface.py directly to ensure configurators have
-been run & changed configuration parameters are updated.
-"""
-
-from pathlib import Path
-
+from ballbeam.common.interface import Interface
+from ballbeam.configurators.configs import BallBeamConfig
 from ballbeam.configurators.configurators import configure_calibrate_all
-from ballbeam.static import COMMON_PATH
 
-configure_calibrate_all()
 
-# TODO(bgravell): eliminate use of exec() by refactoring interface.py to not use globals  # noqa: FIX002, TD003
-with Path(COMMON_PATH.joinpath("interface.py")).open() as f:
-    exec(f.read())  # noqa: S102
+def _get_parsed_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--configure",
+        action="store_true",
+        help="Run all configurators and calibrators, updating parameters.",
+    )
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = _get_parsed_args()
+    if args.configure:
+        configure_calibrate_all()
+    config = BallBeamConfig.from_filesystem()
+    Interface(config.interface).run()

@@ -1,1 +1,1 @@
-"""Common functions for Open Ball & Beam."""
+"""Common code for Open Ball & Beam."""

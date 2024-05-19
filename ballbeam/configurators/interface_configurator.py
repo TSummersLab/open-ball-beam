@@ -24,6 +24,14 @@ def make_interface_configurator() -> Configurator:
 
     cost_type can be one of:
     "Default"
+
+    monitor_types can be a list consisting of any of:
+    "Print"
+    "Plot"
+
+    logger_type can be one of:
+    "None"
+    "Full"
     """
     name = "interface"
     description = "Interface settings"
@@ -32,11 +40,15 @@ def make_interface_configurator() -> Configurator:
     controller_type = "LQG"
     reference_type = "FastSquare"
     cost_type = "Default"
+    monitor_types = ["Print", "Plot"]
+    logger_type = "Full"
 
     data = {
         "system_type": system_type,
         "controller_type": controller_type,
         "reference_type": reference_type,
         "cost_type": cost_type,
+        "monitor_types": monitor_types,
+        "logger_type": logger_type,
     }
     return Configurator(name, data, description)

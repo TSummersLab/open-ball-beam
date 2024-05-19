@@ -9,17 +9,17 @@ import osqp  # type: ignore[import]
 from scipy import sparse  # type: ignore[import]
 
 from ballbeam.common.pickle_io import pickle_export, pickle_import
-from ballbeam.static import CONFIGURATION_PATH
+from ballbeam.paths import CONFIGURATION_PATH
 
 if TYPE_CHECKING:
-    from ballbeam.common.types import NDA
+    from ballbeam.common.type_defs import ArrF64
 
 
 DIRECTORY_NAME_LQG = CONFIGURATION_PATH.joinpath("controller", "lqg")
 DIRECTORY_NAME_MPC = CONFIGURATION_PATH.joinpath("controller", "mpc")
 
 
-def make_design_data() -> dict[str, NDA | int]:
+def make_design_data() -> dict[str, ArrF64 | int]:
     """Make design data."""
     # Copy from LQG
     path_in = DIRECTORY_NAME_LQG.joinpath("design_data.pickle")
@@ -47,7 +47,7 @@ def make_design_data() -> dict[str, NDA | int]:
     return design_data
 
 
-def make_controller_params() -> dict[str, NDA]:
+def make_controller_params() -> dict[str, ArrF64]:
     """Make controller parameters."""
     # Copy from LQG
     path_in = DIRECTORY_NAME_LQG.joinpath("controller_params.pickle")
@@ -57,15 +57,15 @@ def make_controller_params() -> dict[str, NDA]:
 
 
 def make_problem(
-    A: NDA,
-    B: NDA,
-    Q: NDA,
-    QN: NDA,
-    R: NDA,
-    xmin: NDA,
-    xmax: NDA,
-    umin: NDA,
-    umax: NDA,
+    A: ArrF64,
+    B: ArrF64,
+    Q: ArrF64,
+    QN: ArrF64,
+    R: ArrF64,
+    xmin: ArrF64,
+    xmax: ArrF64,
+    umin: ArrF64,
+    umax: ArrF64,
     N: int,
 ) -> osqp.OSQP:
     """Make an OSQP optimal control problem."""

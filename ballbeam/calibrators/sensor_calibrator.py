@@ -8,15 +8,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ballbeam.common.extramath import clipped_mean_rows, sparse2dense_coeffs
-from ballbeam.common.utility import print_arduino_vector
+from ballbeam.common.utils import print_arduino_vector
 from ballbeam.configurators.configurators import Configurator
-from ballbeam.static import CALIBRATION_PATH
+from ballbeam.paths import CALIBRATION_PATH
 
 if TYPE_CHECKING:
-    from ballbeam.common.types import NDA
+    from ballbeam.common.type_defs import ArrF64
 
 
-def get_distance_and_sensor_data(filename: Path | str) -> tuple[NDA, NDA, NDA]:
+def get_distance_and_sensor_data(filename: Path | str) -> tuple[ArrF64, ArrF64, ArrF64]:
     """Get distance and sensor data from a file."""
     distances: list[int] = []
     raw_readings: list[list[float]] = []

@@ -11,13 +11,14 @@ import numpy as np
 from serial import Serial
 
 from ballbeam.common.extramath import saturate, sparse2dense_coeffs
+from ballbeam.common.system import System
 from ballbeam.configurators.configs import CONFIG
 
 if TYPE_CHECKING:
-    from ballbeam.common.types import NDA
+    from ballbeam.common.type_defs import ArrF64
 
 
-class Hardware:
+class HardwareSystem(System):
     """Class representing a physical Open Ball & Beam."""
 
     def __init__(self, ser: Serial | None = None, num_init_reads: int = 3) -> None:
@@ -175,28 +176,32 @@ class Hardware:
         self.observation = self.reading2observation(reading)
         return self.observation
 
-    def reset(self, x: NDA | None = None) -> None:  # noqa: ARG002
+    def reset(self, x: ArrF64 | None = None) -> None:  # noqa: ARG002
         """Reset the system."""
-        print("Resetting system...", end="")
+        print("Resetting system...")
         time_start = time()
         # give time for ball to roll down
         rest_time_seconds = 2.0
         rest_steps = int(rest_time_seconds / self.config.COMM.DT)
-        for _i in range(rest_steps):
+        for _i in range(rest_steps + 1):
             out = struct.pack("h", self.config.SERVO.CMD.REST)
             self.ser.write(out)
             self.observe()
         time_end = time()
         time_elapsed = time_end - time_start
-        print("system reset after resting %.3f seconds" % time_elapsed)
+        print("...system reset after resting %.3f seconds" % time_elapsed)
 
     def shutdown(self) -> None:
         """Shut down the system."""
         print("")
+        print("Shutting down...")
+        print("")
         self.reset()
-        print("Shutting down")
         sleep(0.1)
         # Close serial connection
+        print("Closing serial connection...")
         if self.ser is not None:
             self.ser.close()
+        print("...serial connection closed.")
         sleep(0.1)
+        print("...system shut down.")

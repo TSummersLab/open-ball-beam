@@ -13,9 +13,9 @@ from gym.utils import seeding  # type: ignore[import]
 
 from ballbeam.common.colors import Monokai
 from ballbeam.common.cost import Cost
-from ballbeam.common.hardware import Hardware
+from ballbeam.common.hardware import HardwareSystem
 from ballbeam.common.interface import REFERENCE_CLASS_MAP, instantiate_object_by_class_name
-from ballbeam.common.simulator import XMAX, XMIN, YMAX, YMIN, Simulator
+from ballbeam.common.simulator import XMAX, XMIN, YMAX, YMIN, SimulatorSystem
 from ballbeam.configurators.configs import CONFIG
 
 
@@ -41,8 +41,8 @@ class BallBeamEnv(gym.Env):
         obs_lo, obs_hi = np.array(YMIN, dtype=np.float32), np.array(YMAX, dtype=np.float32)
         self.observation_space = spaces.Box(obs_lo, obs_hi, dtype=np.float32)
         self.max_episode_length = max_episode_length
-        self.system: Hardware | Simulator = (
-            Hardware() if use_hardware else Simulator(process_noise_scale=1.0, sensor_noise_scale=1.0)
+        self.system: HardwareSystem | SimulatorSystem = (
+            HardwareSystem() if use_hardware else SimulatorSystem(process_noise_scale=1.0, sensor_noise_scale=1.0)
         )
         self.reference = instantiate_object_by_class_name(reference_type, REFERENCE_CLASS_MAP)
         self.cost = Cost()

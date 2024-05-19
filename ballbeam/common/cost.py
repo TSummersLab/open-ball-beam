@@ -22,3 +22,8 @@ class Cost:
         self.e = e
         self.u = u
         return {"c": c, "c_error": c_error, "c_action": c_action, "c_action_diff": c_action_diff}
+
+
+# Register all classes with this map
+# TODO(bgravell): Refactor to decorate each concrete class with this registration # noqa: TD003, FIX002
+COST_CLASS_MAP = {"Default": Cost}

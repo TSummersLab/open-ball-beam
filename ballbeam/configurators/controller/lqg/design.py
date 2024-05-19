@@ -8,17 +8,17 @@ import numpy.linalg as la
 from scipy.linalg import expm, solve_discrete_are, solve_discrete_lyapunov  # type: ignore[import]
 
 from ballbeam.common.pickle_io import pickle_export, pickle_import
-from ballbeam.common.utility import print_arduino_vector
+from ballbeam.common.utils import print_arduino_vector
 from ballbeam.configurators.configs import CONFIG
-from ballbeam.static import CONFIGURATION_PATH
+from ballbeam.paths import CONFIGURATION_PATH
 
 if TYPE_CHECKING:
-    from ballbeam.common.types import NDA
+    from ballbeam.common.type_defs import ArrF64
 
 DIRECTORY_NAME_OUT = CONFIGURATION_PATH.joinpath("controller", "lqg")
 
 
-def dlyap(A: NDA, Q: NDA) -> NDA:
+def dlyap(A: ArrF64, Q: ArrF64) -> ArrF64:
     """Solve a discrete-time Lyapunov equation.
 
     Thin wrapper around scipy.linalg.solve_discrete_lyapunov.
@@ -26,7 +26,7 @@ def dlyap(A: NDA, Q: NDA) -> NDA:
     return solve_discrete_lyapunov(a=np.copy(A).T, q=np.copy(Q))
 
 
-def dare(A: NDA, B: NDA, Q: NDA, R: NDA, *, return_gain: bool = False) -> NDA | tuple[NDA, NDA]:
+def dare(A: ArrF64, B: ArrF64, Q: ArrF64, R: ArrF64, *, return_gain: bool = False) -> ArrF64 | tuple[ArrF64, ArrF64]:
     """Solve a discrete-time algebraic Riccati equation.
 
     Thin wrapper around scipy.linalg.solve_discrete_are.
@@ -36,7 +36,7 @@ def dare(A: NDA, B: NDA, Q: NDA, R: NDA, *, return_gain: bool = False) -> NDA | 
     return P, K if return_gain else P
 
 
-def make_design_data() -> dict[str, dict[str, NDA]]:
+def make_design_data() -> dict[str, dict[str, ArrF64]]:
     """Make design data."""
     # Continuous-time model
     Ac = np.array([[0, 1], [0, -CONFIG.model.DAMP_SCALED]])
@@ -77,7 +77,7 @@ def make_design_data() -> dict[str, dict[str, NDA]]:
     return controller_design_data
 
 
-def make_controller_params(*, show_print_arduino: bool = False) -> dict[str, NDA]:
+def make_controller_params(*, show_print_arduino: bool = False) -> dict[str, ArrF64]:
     """Make controller parameters."""
     controller_design_data = pickle_import(DIRECTORY_NAME_OUT.joinpath("design_data.pickle"))
 

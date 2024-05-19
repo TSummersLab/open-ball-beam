@@ -6,9 +6,9 @@ This module loads all YAML config files as objects for use across the library.
 import dataclasses
 from typing import Any
 
-from ballbeam.common.utility import ConvertedObject, convert_dict_to_object
+from ballbeam.common.utils import ConvertedObject, convert_dict_to_object
 from ballbeam.common.yaml_io import yaml_import
-from ballbeam.static import CONFIGURATION_PATH
+from ballbeam.paths import CONFIGURATION_PATH
 
 
 def load_config_as_object(filename: str) -> ConvertedObject:

@@ -66,3 +66,12 @@ class FastSquareReference(PeriodicReference):
     def __init__(self) -> None:
         """Initialize."""
         super().__init__(amplitude=0.030, frequency=0.20, waveform="square")
+
+
+# Register all classes with this map
+# TODO(bgravell): Refactor to decorate each concrete class with this registration # noqa: TD003, FIX002
+REFERENCE_CLASS_MAP = {
+    "Constant": ConstantReference,
+    "SlowSine": SlowSineReference,
+    "FastSquare": FastSquareReference,
+}

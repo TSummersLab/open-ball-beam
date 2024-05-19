@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ballbeam.common.utility import ConvertedObject, convert_dict_to_object
+from ballbeam.common.utils import ConvertedObject, convert_dict_to_object
 from ballbeam.common.yaml_io import yaml_export, yaml_import
-from ballbeam.static import CONFIGURATION_PATH
+from ballbeam.paths import CONFIGURATION_PATH
 
 if TYPE_CHECKING:
     from pathlib import Path

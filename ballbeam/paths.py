@@ -1,4 +1,4 @@
-"""Static paths."""
+"""Paths."""
 
 from pathlib import Path
 

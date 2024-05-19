@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 
 if TYPE_CHECKING:
-    from ballbeam.common.types import NDA
+    from ballbeam.common.type_defs import ArrF64
 
 
 def mix(a: Any, b: Any, x: Any) -> Any:
@@ -42,7 +42,7 @@ def clipped_mean(x: npt.NDArray[Any], p: int = 25) -> float:
     return np.mean(x[mask])
 
 
-def clipped_mean_rows(x: npt.NDArray[Any]) -> NDA:
+def clipped_mean_rows(x: npt.NDArray[Any]) -> ArrF64:
     """Compute row-wise percentile-clipped mean."""
     return np.array([clipped_mean(xi) for xi in x])
 

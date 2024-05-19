@@ -2,6 +2,8 @@
 
 from ballbeam.configurators.configurators import Configurator
 
+DEFAULT_COM_PORT = "COM6"
+
 
 def make_hardware_configurator(*, collect_from_user_input: bool = False) -> Configurator:
     """Make a configurator for hardware."""
@@ -15,7 +17,7 @@ def make_hardware_configurator(*, collect_from_user_input: bool = False) -> Conf
         com_port_number = input("Enter a COM port number:\n")
         PORT = f"COM{com_port_number}"
     else:
-        PORT = "COM5"
+        PORT = DEFAULT_COM_PORT
 
     BAUD_RATE = 115200
 

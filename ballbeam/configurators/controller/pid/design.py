@@ -1,7 +1,7 @@
 """Design of PID controllers."""
 
 from ballbeam.common.pickle_io import pickle_export
-from ballbeam.static import CONFIGURATION_PATH
+from ballbeam.paths import CONFIGURATION_PATH
 
 DIRECTORY_NAME_OUT = CONFIGURATION_PATH.joinpath("controller", "pid")
 

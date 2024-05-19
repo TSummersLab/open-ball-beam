@@ -8,15 +8,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ballbeam.common.extramath import clipped_mean_rows, sparse2dense_coeffs
-from ballbeam.common.utility import print_arduino_vector
+from ballbeam.common.utils import print_arduino_vector
 from ballbeam.configurators.configurators import Configurator
-from ballbeam.static import CALIBRATION_PATH
+from ballbeam.paths import CALIBRATION_PATH
 
 if TYPE_CHECKING:
-    from ballbeam.common.types import NDA
+    from ballbeam.common.type_defs import ArrF64
 
 
-def get_servo_and_imu_data(filename: Path | str) -> tuple[NDA, NDA]:
+def get_servo_and_imu_data(filename: Path | str) -> tuple[ArrF64, ArrF64]:
     """Get servo and IMU data."""
     servo_outs: list[int] = []
     raw_accels: list[list[list[float]]] = []

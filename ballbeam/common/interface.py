@@ -1,313 +1,161 @@
 """Interface to the Open Ball & Beam."""
+
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass
 from time import time
 from typing import Any
 
 import keyboard
-import numpy as np
-import PyQt5
 import pyqtgraph as pg  # type: ignore[import]
 from pyqtgraph.Qt import QtCore, QtWidgets  # type: ignore[import]
 
-from ballbeam.common.colors import Monokai
-from ballbeam.common.controller import Controller, LQGController, MPCController, PIDController, SineController
-from ballbeam.common.cost import Cost
-from ballbeam.common.hardware import Hardware
-from ballbeam.common.reference import ConstantReference, FastSquareReference, SlowSineReference
-from ballbeam.common.simulator import Simulator
-from ballbeam.configurators.configs import CONFIG
+from ballbeam.common.controller import CONTROLLER_CLASS_MAP, Controller
+from ballbeam.common.cost import COST_CLASS_MAP, Cost
+from ballbeam.common.logger import LOGGER_CLASS_MAP, LogData, Logger
+from ballbeam.common.monitor import MONITOR_CLASS_MAP, Monitor
+from ballbeam.common.reference import REFERENCE_CLASS_MAP, Reference
+from ballbeam.common.system import SYSTEM_CLASS_MAP, System
+from ballbeam.common.utils import instantiate_object_by_class_name
+from ballbeam.paths import ROOT_PATH
 
 
-def center_qt_window(win: pg.GraphicsLayoutWidget) -> None:
-    """Center a QT window on the screen."""
-    frameGm = win.frameGeometry()
-    screen = PyQt5.QtWidgets.QApplication.desktop().screenNumber(PyQt5.QtWidgets.QApplication.desktop().cursor().pos())  # type: ignore[attr-defined]
-    centerPoint = PyQt5.QtWidgets.QApplication.desktop().screenGeometry(screen).center()  # type: ignore[attr-defined]
-    frameGm.moveCenter(centerPoint)
-    win.move(frameGm.topLeft())
+class Interface:
+    """Interface to the Open Ball and Beam system."""
 
+    def __init__(self, config: Any) -> None:
+        """Initialize the interface."""
+        # Set the config
+        self.config = config
 
-def setup_legend(plot: pg.PlotItem) -> None:
-    """Create legend in plot and apply style settings."""
-    legend = plot.addLegend(pen=pg.mkPen(color="w", width=1, style=QtCore.Qt.SolidLine))
-    legendLabelStyle = {"size": "10pt", "color": "w"}
-    for item in legend.items:
-        for single_item in item:
-            if isinstance(single_item, pg.graphicsItems.LabelItem.LabelItem):
-                single_item.setText(single_item.text, **legendLabelStyle)
-    # Set legend background color
-    legend.setBrush((64, 64, 64, 224))
+        # Instantiate the system
+        self.system: System = instantiate_object_by_class_name(
+            self.config.system_type,
+            SYSTEM_CLASS_MAP,
+        )
 
+        # Instantiate the controller
+        self.controller: Controller = instantiate_object_by_class_name(
+            self.config.controller_type,
+            CONTROLLER_CLASS_MAP,
+        )
 
-class MyPlotData:
-    """Plot data."""
+        # Instantiate the reference
+        self.reference: Reference = instantiate_object_by_class_name(
+            self.config.reference_type,
+            REFERENCE_CLASS_MAP,
+        )
 
-    def __init__(self, plot: pg.PlotItem, name: str, *, scrolling: bool | None = None) -> None:
-        """Initialize."""
-        self.plot = plot
-        if scrolling is None:
-            self.scrolling = CONFIG.plot.SCROLL
+        # Instantiate the cost
+        self.cost: Cost = instantiate_object_by_class_name(
+            self.config.cost_type,
+            COST_CLASS_MAP,
+        )
 
-        if name == "position":
-            ymin, ymax = -120.0, 120.0
-            pens = [
-                pg.mkPen(color=Monokai.b, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.g, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.y, width=1, style=QtCore.Qt.DashLine),
-                pg.mkPen(color=Monokai.wt, width=1, style=QtCore.Qt.DashLine),
-            ]
-            names = ["Position (measured)", "Position (estimated)", "Position (reference)", None]
-        elif name == "state_estimate":
-            ymin, ymax = -1.0, 1.0
-            pens = [
-                pg.mkPen(color=Monokai.b, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.g, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.y, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.wt, width=1, style=QtCore.Qt.DashLine),
-            ]
-            names = ["Position error (estimated)", "Velocity (estimated)", "Position integral (estimated)", None]
-        elif name == "action":
-            ymin, ymax = -0.40, 0.40
-            pens = [
-                pg.mkPen(color=Monokai.r, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.wt, width=1, style=QtCore.Qt.DashLine),
-            ]
-            names = ["Action", None]
-        elif name == "cost":
-            ymin, ymax = 0.0, 1.0
-            pens = [
-                pg.mkPen(color=Monokai.b, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.g, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.y, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.o, width=2, style=QtCore.Qt.SolidLine),
-                pg.mkPen(color=Monokai.wt, width=1, style=QtCore.Qt.DashLine),
-            ]
-            names = ["Cost", "Error cost", "Action cost", "Action diff cost", None]
-        else:
-            msg = f'Invalid plot data name "{name}"'
-            raise ValueError(msg)
+        # Instantiate the data logger
+        self.logger: Logger = instantiate_object_by_class_name(
+            self.config.logger_type,
+            LOGGER_CLASS_MAP,
+        )
 
-        self.plot.enableAutoRange(axis="y", enable=False)
-        self.plot.setYRange(min=ymin, max=ymax, padding=0)
-        self.num_curves = len(names)
-        if self.scrolling:
-            self.datas = [np.zeros(CONFIG.plot.LENGTH_STEPS) for i in range(self.num_curves)]
-        else:
-            self.datas = [np.zeros(1) for i in range(self.num_curves)]
-        self.curves = [self.plot.plot(data, pen=pen, name=name) for data, pen, name in zip(self.datas, pens, names)]
+        # Instantiate the monitors
+        self.monitors: list[Monitor] = [
+            instantiate_object_by_class_name(
+                monitor_type,
+                MONITOR_CLASS_MAP,
+            )
+            for monitor_type in self.config.monitor_types
+        ]
 
+        # Initialization
+        self.time_start = time()
+        self.time_last = time()
+        self.t = 0
 
-@dataclass
-class Data:
-    """Interface data."""
+        # Create the Qt application
+        self.app = QtWidgets.QApplication(sys.argv)
+        self.app.aboutToQuit.connect(self.stop)
+        self.timer = pg.QtCore.QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(0)
 
-    state_estimate: np.ndarray
-    observation: float
-    action: float
-    setpoint: float
-    cost_dict: dict
-    time_since_last: float
+        # Hook up the keyboard listener
+        keyboard.on_press_key("enter", self.on_enter_press)
 
+    def run(self) -> None:
+        """Run the interface."""
+        # Start the monitors
+        for monitor in self.monitors:
+            monitor.start()
 
-def update_print(data: Data) -> str:
-    """Update the printed data."""
-    strings = []
-    strings.append("%6d" % t)
-    vals = [
-        data.time_since_last,
-        data.setpoint,
-        data.observation,
-        data.setpoint + data.state_estimate[0],
-        data.state_estimate[1],
-        data.state_estimate[2],
-        data.action,
-        data.cost_dict["c"],
-    ]
-    spacer = "    "
-    strings.append(spacer.join(["%6.3f" % val for val in vals]))
-    row_str = spacer.join(strings)
-    print("\r" + row_str, end="")
-    return row_str
-
-
-def update_plot_data(plot_data_dict: dict[str, MyPlotData], data: Data) -> None:
-    """Update the plot data."""
-    for key in plot_data_dict:
-        if key == "position":
-            new_vals = [1000 * data.observation, 1000 * (data.setpoint + data.state_estimate[0]), 1000 * data.setpoint]
-        elif key == "state_estimate":
-            new_vals = [5 * data.state_estimate[0], data.state_estimate[1], 10.0 * data.state_estimate[2]]
-        elif key == "action":
-            new_vals = [data.action]
-        elif key == "cost":
-            new_vals = [data.cost_dict[key] for key in ["c", "c_error", "c_action", "c_action_diff"]]
-        else:
-            raise ValueError
-
-        plot_data = plot_data_dict[key]
-
-        for i in range(plot_data.num_curves):
-            if plot_data.scrolling:
-                if (
-                    i < plot_data.num_curves - 1
-                ):  # skip the last curve, which is assumed to be a constant zero (dashed line)
-                    plot_data.datas[i][:-1] = plot_data.datas[i][
-                        1:
-                    ]  # shift data in the array one sample left  # (see also: np.roll)
-                    plot_data.datas[i][-1] = new_vals[i]  # add the new value to the end
-                    plot_data.curves[i].setData(plot_data.datas[i])  # update the data in each curve
-                plot_data.curves[i].setPos(
-                    t - CONFIG.plot.LENGTH_STEPS,
-                    0,
-                )  # shift the x range of each curve to achieve the scrolling effect
-            else:  # noqa: PLR5501
-                if i < plot_data.num_curves - 1:
-                    plot_data.datas[i] = np.append(
-                        plot_data.datas[i],
-                        new_vals[i],
-                    )  # shift data in the array one sample left  # (see also: np.roll)
-                    plot_data.curves[i].setData(plot_data.datas[i])  # update the data in each curve
-
-
-def update_displayed_data(data: Data) -> None:
-    """Update the displayed data."""
-    update_print(data)
-
-    if CONFIG.plot.SHOW_KEYS:
-        # TODO(bgravell): get rid of globals  # noqa: TD003, FIX002
-        global plot_data_dict  # noqa: PLW0602
-        update_plot_data(plot_data_dict, data)
-
-
-def update() -> None:
-    """Update the interface."""
-    # TODO(bgravell): get rid of globals  # noqa: TD003, FIX002
-    global time_start, time_last  # noqa: PLW0602, PLW0603
-    global t  # noqa: PLW0603
-
-    time_now = time()
-    time_now - time_start
-    time_since_last = time_now - time_last
-    time_last = time_now
-
-    # Get a new observation from the system
-    observation = system.observe()
-
-    # Get the current setpoint from the reference
-    setpoint = reference.setpoint(t)
-
-    # Update the controller with latest information
-    controller.update_aux(saturated=system.saturated, ball_removed=system.ball_removed)
-    controller.update(observation, setpoint, t)
-
-    # Get the control action from the controller based on latest information
-    action = controller.action
-
-    # Get the current estimate of the state from the controller
-    state_estimate = controller.state_estimate
-
-    # Get the current cost of the observation and action
-    cost_dict = cost.take(observation, action)
-
-    # Evolve the system forward by one step
-    system.process(action)
-
-    # Increment the time index
-    t += 1
-
-    # Data display
-    data = Data(state_estimate, observation, action, setpoint, cost_dict, time_since_last)
-    update_displayed_data(data)
-
-
-SYSTEM_CLASS_MAP = {
-    "Simulator": Simulator,
-    "Hardware": Hardware,
-}
-
-CONTROLLER_CLASS_MAP = {
-    "Null": Controller,
-    "Sine": SineController,
-    "PID": PIDController,
-    "LQG": LQGController,
-    "MPC": MPCController,
-}
-
-REFERENCE_CLASS_MAP = {
-    "Constant": ConstantReference,
-    "SlowSine": SlowSineReference,
-    "FastSquare": FastSquareReference,
-}
-
-COST_CLASS_MAP = {"Default": Cost}
-
-
-def instantiate_object_by_class_name(class_name: str, class_map: dict[str, Any]) -> Any:
-    """Instantiate an object by class name using a class map."""
-    selected_class = class_map.get(class_name)
-    if selected_class is None:
-        msg = f'Failed to find class for class name "{class_name}", must be one of {sorted(class_map)}.'
-        raise ValueError(msg)
-    return selected_class()
-
-
-if __name__ == "__main__":
-    # Instantiate the system
-    system = instantiate_object_by_class_name(CONFIG.interface.system_type, SYSTEM_CLASS_MAP)
-
-    # Instantiate the controller
-    controller = instantiate_object_by_class_name(CONFIG.interface.controller_type, CONTROLLER_CLASS_MAP)
-
-    # Instantiate the reference
-    reference = instantiate_object_by_class_name(CONFIG.interface.reference_type, REFERENCE_CLASS_MAP)
-
-    # Instantiate the cost
-    cost = instantiate_object_by_class_name(CONFIG.interface.cost_type, COST_CLASS_MAP)
-
-    # Initialization
-    time_start = time()
-    time_last = time()
-
-    t = 0
-
-    strings = ["     t", "    dt", "ps_ref", "ps_mes", "ps_est", "vl_est", "ip_est", "     u", "  cost"]
-    spacer = "    "
-    header_str = spacer.join(strings)
-    print(header_str)
-
-    if CONFIG.plot.SHOW_KEYS:
-        # enable antialiasing to get rid of jaggies, turn off to save render time
-        pg.setConfigOptions(antialias=CONFIG.plot.ANTIALIAS)
-        pg.setConfigOption("background", Monokai.k)
-        pg.setConfigOption("foreground", Monokai.wt)
-        win = pg.GraphicsLayoutWidget(show=True, title="Ball & Beam control data")
-        win.resize(*CONFIG.plot.WINDOW_SIZE)  # Set the window size
-        center_qt_window(win)
-
-        plot_data_dict = {}
-        for key in CONFIG.plot.SHOW_KEYS:
-            plot = win.addPlot()
-            setup_legend(plot)
-            plot_data_dict[key] = MyPlotData(plot, key)
-            win.nextRow()
-
-        timer = pg.QtCore.QTimer()
-        timer.timeout.connect(update)
-        timer.start(0)
-
+        # Start the Qt app
         if (sys.flags.interactive != 1) or not hasattr(QtCore, "PYQT_VERSION"):
-            app = QtWidgets.QApplication(sys.argv)
-            app.instance().exec_()
+            self.app.exec_()
 
-        system.shutdown()
-    else:
-        while True:
-            # TODO(bgravell): make data history logging independent of plotting, and pass history data to realtime plotter  # noqa: FIX002, TD003, E501
-            # TODO(bgravell): add option to save history data  # noqa: FIX002, TD003
-            update()
-            if keyboard.is_pressed("enter"):
-                break
-        system.shutdown()
+    def update(self) -> None:
+        """Update the interface."""
+        # Update timestamps
+        time_now = time()
+        time_since_last = time_now - self.time_last
+        self.time_last = time_now
+
+        # Get a new observation from the system
+        observation = self.system.observe()
+
+        # Get the current setpoint from the reference
+        setpoint = self.reference.setpoint(self.t)
+
+        # Update the controller with latest information
+        self.controller.update_aux(saturated=self.system.saturated, ball_removed=self.system.ball_removed)
+        self.controller.update(observation, setpoint, self.t)
+
+        # Get the control action from the controller based on latest information
+        action = self.controller.action
+
+        # Get the current estimate of the state from the controller
+        state_estimate = self.controller.state_estimate.tolist()
+
+        # Get the current cost of the observation and action
+        cost_dict = self.cost.take(observation, action)
+
+        # Evolve the system forward by one step
+        self.system.process(action)
+
+        # Increment the time index
+        self.t += 1
+
+        # Get log data
+        log_data = LogData(
+            state_estimate=state_estimate,
+            observation=observation,
+            action=action,
+            setpoint=setpoint,
+            cost_dict=cost_dict,
+            time_since_last=time_since_last,
+            time_now=time_now,
+            time_step=self.t,
+        )
+
+        # Update logger
+        self.logger.append(log_data)
+
+        # Update monitors
+        for monitor in self.monitors:
+            monitor.update(log_data)
+
+    def stop(self) -> None:
+        """Stop the interface."""
+        # Stop the timer
+        self.timer.stop()
+
+        # Shut the system down
+        self.system.shutdown()
+
+        # Dump data
+        file_name = str(int(time() * 1e9)) + ".json"
+        log_data_file_path = ROOT_PATH / "data" / file_name
+        self.logger.dump(log_data_file_path)
+
+    def on_enter_press(self, event: Any) -> None:  # noqa: ARG002
+        """Handle "enter" key press to quit the application."""
+        self.app.quit()
