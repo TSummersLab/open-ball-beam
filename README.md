@@ -226,10 +226,9 @@ In particular, the more computationally intensive MPC strategy can be used.
 
 1. Adjust all the configurable parameters in the [`*_configurator.py`](ballbeam/configurators) files as needed.
      - Set the `system_type` variable to `'Simulator'` in [`interface_configurator.py`](ballbeam/configurators/interface_configurator.py) first to ensure proper functioning in the simulator before attempting to run on the physical hardware.
-2. Run [`configurators.py`](ballbeam/configurators/configurators.py) to run all configurators.
-3. Run [`interface.py`](ballbeam/common/interface.py) to start the interface (without running configurators).
-
-Alternatively, run [`main.py`](ballbeam/main.py) to run the configurators as well as start the interface.
+2. Run [`python configurators.py`](ballbeam/configurators/configurators.py) to run all configurators.
+3. Run [`python main.py`](ballbeam/common/interface.py) to start the interface (without running configurators).
+    - Alternatively, run [`python main.py --configure`](ballbeam/main.py) to run the configurators as well as start the interface.
 
 ## Mathematics
 

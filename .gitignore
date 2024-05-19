@@ -1,5 +1,6 @@
 ballbeam/configuration/*
 ballbeam/*.pyd
+data/*
 
 # PyCharm
 .idea/
