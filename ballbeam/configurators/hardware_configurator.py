@@ -1,8 +1,19 @@
 """Configurator for hardware."""
 
+import serial.tools.list_ports
+
 from ballbeam.configurators.configurators import Configurator
 
-DEFAULT_COM_PORT = "COM6"
+
+def get_ch340_port():
+    ports = serial.tools.list_ports.comports()
+    for port in ports:
+        if "CH340" in port.description:
+            return port.device
+
+
+# This assumes there is one CH340 plugged into the machine when this module is imported and run.
+DEFAULT_COM_PORT = get_ch340_port()
 
 
 def make_hardware_configurator(*, collect_from_user_input: bool = False) -> Configurator:
