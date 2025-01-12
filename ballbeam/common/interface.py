@@ -15,7 +15,8 @@ from ballbeam.common.cost import COST_CLASS_MAP, Cost
 from ballbeam.common.logger import LOGGER_CLASS_MAP, LogData, Logger
 from ballbeam.common.monitor import MONITOR_CLASS_MAP, Monitor
 from ballbeam.common.reference import REFERENCE_CLASS_MAP, Reference
-from ballbeam.common.system import SYSTEM_CLASS_MAP, System
+from ballbeam.common.system import System
+from ballbeam.common.concrete_systems import SYSTEM_CLASS_MAP
 from ballbeam.common.utils import instantiate_object_by_class_name
 from ballbeam.paths import ROOT_PATH
 
