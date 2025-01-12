@@ -1,6 +1,10 @@
 """Classes representing reference trajectories."""
 
+import secrets
+from functools import partial
+
 import numpy as np
+from scipy.signal import square, sawtooth
 
 from ballbeam.configurators.configs import CONFIG
 
@@ -57,7 +61,7 @@ class SlowSineReference(PeriodicReference):
 
     def __init__(self) -> None:
         """Initialize."""
-        super().__init__(amplitude=0.050, frequency=0.10, waveform="sine")
+        super().__init__(amplitude=0.040, frequency=0.10, waveform="sine")
 
 
 class FastSquareReference(PeriodicReference):
@@ -68,10 +72,63 @@ class FastSquareReference(PeriodicReference):
         super().__init__(amplitude=0.030, frequency=0.20, waveform="square")
 
 
+class RandomWavesReference(Reference):
+    """A random waves reference trajectory."""
+
+    def get_wavefunc(self, waveform: str):
+        if waveform == "sine":
+            return np.sin
+        elif waveform == "square":
+            return square
+        elif waveform == "triangle":
+            return partial(sawtooth, width=0.5)
+        elif waveform == "sawtooth up":
+            return partial(sawtooth, width=1.0)
+        elif waveform == "sawtooth down":
+            return partial(sawtooth, width=0.0)
+
+        raise ValueError
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.seed = secrets.randbits(128)
+        self.rng = np.random.default_rng(self.seed)
+        setpoint_history_chunks = []
+        for i in range(1000):
+            if i == 0:
+                # Give the system a chance to get stabilized in a neutral position for 10 seconds.
+                duration = 10.0
+                amplitude = 0.0
+                waveform = "sine"
+                frequency = 1.0
+                phase = 0.0
+            else:
+                duration = self.rng.uniform(low=1.0, high=5.0)
+                amplitude = self.rng.uniform(low=0.0, high=0.025)
+                waveform = self.rng.choice(["sine", "square", "triangle", "sawtooth up", "sawtooth down"], p=[0.5, 0.1, 0.2, 0.1, 0.1])
+                frequency = 10**(self.rng.uniform(low=-1.0, high=0.0))
+                phase = self.rng.uniform(low=0.0, high=1.0)
+
+            wavefunc = self.get_wavefunc(waveform)
+
+            t = np.arange(0, duration, CONFIG.hardware.COMM.DT)
+
+            chunk = amplitude * wavefunc(2 * np.pi * (frequency * t + phase))
+
+            setpoint_history_chunks.append(chunk)
+        self.setpoint_history = np.hstack(setpoint_history_chunks)
+
+    def setpoint(self, t: int) -> float:
+        """Compute the setpoint at time index t."""
+        return self.setpoint_history[t]
+
+
+
 # Register all classes with this map
 # TODO(bgravell): Refactor to decorate each concrete class with this registration # noqa: TD003, FIX002
 REFERENCE_CLASS_MAP = {
     "Constant": ConstantReference,
     "SlowSine": SlowSineReference,
     "FastSquare": FastSquareReference,
+    "RandomWaves": RandomWavesReference,
 }
