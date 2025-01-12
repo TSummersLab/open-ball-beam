@@ -30,7 +30,7 @@ class ConstantReference(Reference):
         return self.center
 
 
-class PeriodicReference(ConstantReference):
+class PeriodicReference(Reference):
     """A reference that changes periodically with a given waveform."""
 
     def __init__(self, amplitude: float = 0.050, frequency: float = 0.1, waveform: str = "sine") -> None:
@@ -45,7 +45,7 @@ class PeriodicReference(ConstantReference):
         phase = self.frequency * t * CONFIG.hardware.COMM.DT
         phase_rad = 2 * np.pi * phase
         if self.waveform == "sine":
-            deviation = np.sin(phase_rad)
+            deviation = -np.cos(phase_rad)
         elif self.waveform == "rounded_square":
             sharpness = 3  # bigger = closer to a square wave, smaller = closer to a sine wave
             deviation = np.tanh(sharpness * np.sin(phase_rad))
@@ -53,7 +53,7 @@ class PeriodicReference(ConstantReference):
             deviation = np.sign(float(phase % 2 > 1) - 0.5)
         else:
             raise ValueError
-        return self.center + self.amplitude * deviation
+        return self.amplitude * deviation
 
 
 class SlowSineReference(PeriodicReference):
