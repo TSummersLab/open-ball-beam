@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+import copy
 
 import numpy as np
 
@@ -10,6 +11,8 @@ from ballbeam.common.extramath import mix
 from ballbeam.common.pickle_io import pickle_import
 from ballbeam.configurators.configs import CONFIG
 from ballbeam.paths import CONFIGURATION_PATH
+from ballbeam.common.mspc import MultiStepPredictiveController
+
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -107,6 +110,30 @@ class Controller:
         return self._z
 
 
+class RandomConstantController(Controller):
+    """Generate random constant controls.
+
+    This is not a closed-loop feedback controller.
+    """
+
+    def __init__(self) -> None:
+        """Initialize."""
+        super().__init__()
+        self.period = 20
+        self.countdown = copy.copy(self.period)
+
+
+    def my_update(self, t: int) -> None:
+        """Update internal action."""
+        self.countdown -= 1
+        self._u += np.random.uniform(-0.01, 0.01)
+        self._u = np.clip(self._u, -0.1, 0.1)
+        if self.countdown == 0:
+            self.countdown = np.random.randint(10, 30)
+            self._u = np.random.uniform(-0.05, 0.05)
+        
+
+
 class SineController(Controller):
     """Sine controller that just generates a sine wave.
 
@@ -202,13 +229,9 @@ class MPCController(Controller):
         # Need to add the root path where the emosqp python extension module file is located
         # to enable `import emosqp` to work
         import sys
-
         from ballbeam.paths import ROOT_PATH
-
         sys.path.append(str(ROOT_PATH))
-
         import emosqp  # type: ignore[import-not-found]
-
         self.solver = emosqp
 
         if controller_params_path is None:
@@ -288,12 +311,64 @@ class MPCController(Controller):
         self._u += du
 
 
+class MSPCController(Controller):
+    """Multi-step input-output predictive controller."""
+
+    def __init__(self, controller_params_path: Path | str | None = None) -> None:
+        """Initialize."""
+        super().__init__()
+        if controller_params_path is None:
+            controller_params_path = CONFIGURATION_PATH.joinpath("controller", "mspc", "controller_params.npz")
+        self.con = MultiStepPredictiveController.from_file_path(controller_params_path)
+        self.obs_history = np.zeros(self.con.predictor.horizons.past)
+        self.act_history = np.zeros(self.con.predictor.horizons.past)
+
+
+    def update(self, observation: float, setpoint: float, t: int) -> None:
+        """Update internal state of the controller.
+
+        Args:
+        ----
+        observation: observed value, in meters
+        setpoint: target observation value, in meters
+        t: time index since start
+        """
+        self.error_update(observation, setpoint)
+
+        # This logic provides deactivation upon ball removal.
+        if self.ball_removed:
+            self.error = 0
+            self.error_sum = 0
+        else:
+            self.my_update(observation, setpoint)
+        
+    
+    def my_update(self, observation, setpoint):
+        # Update observation history
+        self.obs_history = np.roll(self.obs_history, -1)
+        self.obs_history[-1] = observation
+
+        # Create a lookahead reference observation
+        obs_futr_ref = np.full(self.con.predictor.horizons.futr, setpoint)
+
+        # Compute action
+        act_futr = self.con.act(self.act_history, self.obs_history, obs_futr_ref)
+        action = act_futr[0]
+        self._u = action
+
+        # Update action history
+        self.act_history = np.roll(self.act_history, -1)
+        self.act_history[-1] = action
+
+
 # Register all classes with this map
 # TODO(bgravell): Refactor to decorate each concrete class with this registration # noqa: TD003, FIX002
 CONTROLLER_CLASS_MAP = {
     "Null": Controller,
+    "Random": RandomConstantController,
     "Sine": SineController,
     "PID": PIDController,
     "LQG": LQGController,
     "MPC": MPCController,
+    "MSPC": MSPCController,
 }

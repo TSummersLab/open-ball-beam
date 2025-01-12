@@ -4,43 +4,29 @@ from ballbeam.configurators.configurators import Configurator
 
 
 def make_interface_configurator() -> Configurator:
-    """Make a configurator for the interface.
+    """Make a configurator for the interface."""
 
-    system_type can be one of:
-    "Simulator"
-    "Hardware"
-
-    controller_type can be one of:
-    "Null"
-    "Sine"
-    "PID"
-    "LQG"
-    "MPC"
-
-    reference_type can be one of:
-    "Constant"
-    "SlowSine"
-    "FastSquare"
-
-    cost_type can be one of:
-    "Default"
-
-    monitor_types can be a list consisting of any of:
-    "Print"
-    "Plot"
-
-    logger_type can be one of:
-    "None"
-    "Full"
-    """
     name = "interface"
     description = "Interface settings"
 
-    system_type = "Hardware"
-    controller_type = "LQG"
+    # system_type = "Hardware"
+    system_type = "Simulator"
+
+    # controller_type = "Random"
+    controller_type = "PID"
+    # controller_type = "LQG"
+    # controller_type = "MSPC"
+
+    # reference_type = "Constant"
     reference_type = "FastSquare"
+    # reference_type = "SlowSine"
+    # reference_type = "RandomWaves"
+
     cost_type = "Default"
+
     monitor_types = ["Print", "Plot"]
+    # monitor_types = ["Print"]
+
     logger_type = "Full"
 
     data = {
@@ -51,4 +37,5 @@ def make_interface_configurator() -> Configurator:
         "monitor_types": monitor_types,
         "logger_type": logger_type,
     }
+
     return Configurator(name, data, description)
