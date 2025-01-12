@@ -108,6 +108,8 @@ class SimulatorSystem(System):
             x0 = np.zeros(self.n)
             x0[0] = XMIN
         self.x = x0
+        self.saturated = False
+        self.ball_removed = False
 
         self.rng = npr.default_rng(random_seed)
 
