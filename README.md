@@ -216,6 +216,14 @@ In the Python API, the majority of processing occurs on the host computer and th
 The benefit of the Python API is that the full computing power of the host computer can be used to control the system.
 In particular, the more computationally intensive MPC strategy can be used.
 
+#### Setup
+
+In order to use the MPC controller, the solver code must be generated with
+
+```bash
+python configurators/controller/mpc/design.py
+```
+
 #### Usage
 
 ##### Arduino
